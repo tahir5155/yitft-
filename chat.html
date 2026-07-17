@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chat — YITFT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B1B2B; --slate:#5A6B7C; --green:#0E9F6E; --green-dark:#0B7A55;
+    --green-soft:#E6F6F0; --bg-soft:#F6F8FA; --line:#E4E9EE; --red:#E23B3B; --red-soft:#FDEDEB;
+    --gold:#D9A400; --gold-soft:#FFF6E0;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Inter',sans-serif;color:var(--ink);background:var(--bg-soft);height:100vh;display:flex;flex-direction:column}
+  h1,h2{font-family:'Sora',sans-serif;letter-spacing:-.02em}
+  #yitftNav{flex-shrink:0}
+
+  .chat-head{
+    background:#fff;border-bottom:1px solid var(--line);padding:14px 20px;
+    display:flex;align-items:center;gap:12px;flex-shrink:0;
+  }
+  .chat-head .back{color:var(--slate);text-decoration:none;font-size:1.2rem;padding:4px}
+  .cavatar{
+    width:42px;height:42px;border-radius:50%;flex-shrink:0;overflow:hidden;
+    background:linear-gradient(135deg,var(--green),#3BC9A0);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Sora';font-weight:800;font-size:.95rem;color:#fff;
+  }
+  .cavatar img{width:100%;height:100%;object-fit:cover}
+  .chat-head .info{flex:1;min-width:0}
+  .chat-head .name{font-weight:700;font-size:.98rem}
+  .chat-head .sub{font-size:.78rem;color:var(--slate)}
+  .head-actions{display:flex;gap:8px}
+  .icon-btn{
+    background:none;border:1.5px solid var(--line);border-radius:9px;
+    padding:7px 12px;font-size:.8rem;font-weight:600;color:var(--slate);cursor:pointer;
+  }
+  .icon-btn:hover{border-color:var(--slate);color:var(--ink)}
+  .icon-btn.danger{color:var(--red);border-color:#F0B9B1}
+  .icon-btn.danger:hover{background:var(--red-soft)}
+
+  .messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:10px}
+  .loading{text-align:center;color:var(--slate);padding:40px}
+  .empty-chat{text-align:center;color:var(--slate);padding:40px;font-size:.9rem}
+  .bubble{max-width:70%;padding:11px 15px;border-radius:16px;font-size:.92rem;line-height:1.45;word-wrap:break-word}
+  .bubble.mine{align-self:flex-end;background:var(--green);color:#fff;border-bottom-right-radius:4px}
+  .bubble.theirs{align-self:flex-start;background:#fff;border:1px solid var(--line);border-bottom-left-radius:4px}
+  .bubble-time{font-size:.68rem;opacity:.7;margin-top:4px;display:block}
+
+  .composer{
+    background:#fff;border-top:1px solid var(--line);padding:14px 20px;
+    display:flex;gap:10px;align-items:center;flex-shrink:0;
+  }
+  .composer input{
+    flex:1;border:1.5px solid var(--line);border-radius:99px;
+    padding:12px 18px;font-family:'Inter';font-size:.92rem;outline:none;
+  }
+  .composer input:focus{border-color:var(--green)}
+  .composer button{
+    background:var(--green);color:#fff;border:none;cursor:pointer;
+    font-family:'Inter';font-weight:600;font-size:.9rem;padding:12px 22px;border-radius:99px;
+  }
+  .composer button:hover{background:var(--green-dark)}
+  .composer button:disabled{background:var(--slate);cursor:not-allowed}
+  .blocked-note{
+    background:var(--red-soft);color:var(--red);text-align:center;padding:12px;
+    font-size:.85rem;flex-shrink:0;
+  }
+
+  /* Deal Card — shown inline within the message feed, like a special message */
+  .deal-card{
+    background:#fff;border:1px solid var(--line);border-left:4px solid var(--green);
+    align-self:center;width:100%;max-width:420px;padding:16px 18px;border-radius:12px;
+  }
+  .deal-card.declined{border-left-color:var(--red)}
+  .deal-empty{color:var(--slate);font-size:.86rem;margin-bottom:10px}
+  .deal-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+  .deal-num{font-size:.72rem;color:var(--slate);font-weight:600;letter-spacing:.03em}
+  .deal-status{font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:99px}
+  .deal-status.pending{background:var(--gold-soft);color:#B8860B}
+  .deal-status.active{background:var(--green-soft);color:var(--green-dark)}
+  .deal-status.done{background:var(--green-soft);color:var(--green-dark)}
+  .deal-status.declined{background:var(--red-soft);color:var(--red)}
+  .deal-title{font-family:'Sora';font-weight:700;font-size:1rem;margin-top:6px}
+  .deal-desc{font-size:.85rem;color:var(--slate);margin-top:4px}
+  .deal-amount{font-family:'Sora';font-weight:700;color:var(--green-dark);margin-top:8px;font-size:1.05rem}
+  .deal-actions{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .deal-note{font-size:.85rem;color:var(--slate)}
+  .deal-btn{
+    border:none;border-radius:9px;padding:10px 18px;font-family:'Inter';font-weight:600;
+    font-size:.86rem;cursor:pointer;
+  }
+  .deal-btn.primary{background:var(--green);color:#fff}
+  .deal-btn.primary:hover{background:var(--green-dark)}
+  .deal-btn.ghost{background:none;border:1.5px solid var(--line);color:var(--slate)}
+  .deal-submission{background:var(--bg-soft);border-radius:10px;padding:12px 14px;font-size:.86rem;width:100%}
+  .deal-submission a{color:var(--green-dark);font-weight:600;word-break:break-all}
+  .deal-submission p{color:var(--slate);margin-top:6px}
+
+  .modal input{
+    width:100%;border:1.5px solid var(--line);border-radius:10px;padding:11px 13px;
+    font-family:'Inter';font-size:.9rem;margin-bottom:12px;outline:none;
+  }
+  .modal input:focus,.modal textarea:focus,.modal select:focus{border-color:var(--green)}
+  .modal-actions .submit.primary{background:var(--green)}
+
+  .photo-mini-upload{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+  .photo-mini-preview{
+    width:60px;height:60px;border-radius:8px;overflow:hidden;background:var(--bg-soft);
+    border:1.5px dashed var(--line);display:flex;align-items:center;justify-content:center;
+    font-size:1.2rem;color:var(--slate);flex-shrink:0;
+  }
+  .photo-mini-preview img{width:100%;height:100%;object-fit:cover}
+  .photo-mini-upload label{
+    cursor:pointer;font-size:.83rem;font-weight:600;color:var(--green-dark);
+    border:1.5px solid var(--green);padding:7px 14px;border-radius:8px;
+  }
+  .photo-mini-upload input[type=file]{display:none}
+
+  .stars-picker{font-size:1.8rem;display:flex;gap:6px;margin-bottom:14px}
+  .star-pick{color:var(--line);cursor:pointer;transition:color .1s}
+  .star-pick.filled{color:var(--gold)}
+
+  /* Report modal */
+  .overlay{
+    display:none;position:fixed;inset:0;background:rgba(11,27,43,.5);
+    align-items:center;justify-content:center;z-index:50;padding:20px;
+  }
+  .overlay.visible{display:flex}
+  .modal{background:#fff;border-radius:16px;padding:28px;max-width:420px;width:100%}
+  .modal h2{font-size:1.15rem;margin-bottom:6px}
+  .modal p{color:var(--slate);font-size:.86rem;margin-bottom:18px}
+  .modal select,.modal textarea{
+    width:100%;border:1.5px solid var(--line);border-radius:10px;padding:11px 13px;
+    font-family:'Inter';font-size:.9rem;margin-bottom:12px;outline:none;
+  }
+  .modal textarea{min-height:70px;resize:vertical}
+  .modal-actions{display:flex;gap:10px;justify-content:flex-end}
+  .modal-actions button{
+    padding:10px 20px;border-radius:9px;font-family:'Inter';font-weight:600;
+    font-size:.88rem;cursor:pointer;border:none;
+  }
+  .modal-actions .cancel{background:var(--bg-soft);color:var(--ink)}
+  .modal-actions .submit{background:var(--red);color:#fff}
+  .modal-msg{font-size:.85rem;margin-top:10px;display:none}
+  .modal-msg.ok{color:var(--green-dark)}
+
+  .empty-page{text-align:center;padding:80px 20px;color:var(--slate)}
+</style>
+</head>
+<body>
+
+<div id="yitftNav"></div>
+
+<div id="app" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+  <div class="loading">Loading conversation...</div>
+</div>
+
+<!-- Report modal -->
+<div class="overlay" id="reportOverlay">
+  <div class="modal">
+    <h2>Report this conversation</h2>
+    <p>Our team will review this conversation. This does not notify the other person.</p>
+    <select id="reportReason">
+      <option value="">Select a reason</option>
+      <option value="Abuse or harassment">Abuse or harassment</option>
+      <option value="Scam attempt">Scam attempt</option>
+      <option value="Asking to move off-platform">Asking to move off-platform</option>
+      <option value="Fake profile">Fake profile</option>
+      <option value="Other">Other</option>
+    </select>
+    <textarea id="reportDetails" placeholder="Any extra details (optional)"></textarea>
+    <div class="modal-msg" id="reportMsg"></div>
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeReport()">Cancel</button>
+      <button class="submit" onclick="submitReport()">Submit report</button>
+    </div>
+  </div>
+</div>
+
+<!-- Send Offer modal (both brand and creator use this, brand also pays here) -->
+<div class="overlay" id="offerOverlay">
+  <div class="modal">
+    <h2 id="offerModalTitle">Send an offer</h2>
+    <p id="offerModalSub">Describe the work and price.</p>
+    <input id="offerTitle" placeholder="e.g. 2 Instagram Reels — Summer Collection">
+    <textarea id="offerDesc" placeholder="Describe what you need (optional)"></textarea>
+    <input id="offerAmount" type="number" min="1" placeholder="Amount (Rs)">
+    <input id="offerDeadline" type="date">
+    <div id="offerPaymentSection" style="display:none">
+      <div style="font-size:.78rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--green-dark);margin:14px 0 10px">Payment details</div>
+      <input id="offerPaymentNote" placeholder="Transaction ID or short note">
+      <div class="photo-mini-upload">
+        <div class="photo-mini-preview" id="offerPaymentPreview">🧾</div>
+        <label for="offerPaymentFile">Upload screenshot
+          <input id="offerPaymentFile" type="file" accept="image/*" onchange="handleOfferPaymentProof(event)">
+        </label>
+      </div>
+    </div>
+    <div class="modal-msg" id="offerMsg"></div>
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeModal('offerOverlay')">Cancel</button>
+      <button class="submit primary" id="offerSubmitBtn" onclick="submitOffer()">Send Offer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Payment Proof modal (brand only) -->
+<div class="overlay" id="paymentOverlay">
+  <div class="modal">
+    <h2>Send payment</h2>
+    <p>Send the amount to YITFT's JazzCash/bank account, then tell us the transaction details below. We'll verify it and secure the deal.</p>
+    <input id="paymentNote" placeholder="Transaction ID or short note">
+    <div class="photo-mini-upload">
+      <div class="photo-mini-preview" id="paymentPreview">🧾</div>
+      <label for="paymentFile">Upload screenshot
+        <input id="paymentFile" type="file" accept="image/*" onchange="handlePaymentProof(event)">
+      </label>
+    </div>
+    <div class="modal-msg" id="paymentMsg"></div>
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeModal('paymentOverlay')">Cancel</button>
+      <button class="submit primary" onclick="submitPayment()">Submit Payment Proof</button>
+    </div>
+  </div>
+</div>
+
+<!-- Work Submission modal (creator only) -->
+<div class="overlay" id="submissionOverlay">
+  <div class="modal">
+    <h2>Submit your work</h2>
+    <p>Add a link to the content you created (post link, Google Drive, etc.)</p>
+    <input id="subLink" type="url" placeholder="https://...">
+    <textarea id="subNote" placeholder="Any notes for the brand (optional)"></textarea>
+    <div class="modal-msg" id="subMsg"></div>
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeModal('submissionOverlay')">Cancel</button>
+      <button class="submit primary" onclick="submitWork()">Submit Work</button>
+    </div>
+  </div>
+</div>
+
+<!-- Rating modal -->
+<div class="overlay" id="ratingOverlay">
+  <div class="modal">
+    <h2>Rate this deal</h2>
+    <p>Your honest rating helps keep YITFT trustworthy.</p>
+    <div class="stars-picker" id="starsPicker"></div>
+    <textarea id="ratingReview" placeholder="A short review (optional)"></textarea>
+    <div class="modal-msg" id="ratingMsg"></div>
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeModal('ratingOverlay')">Cancel</button>
+      <button class="submit primary" onclick="submitRating()">Submit Rating</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="yitft-config.js"></script>
+<script src="yitft-notif.js"></script>
+<script src="yitft-nav.js"></script>
+<script>
+  const app = document.getElementById('app');
+  const conversationId = new URLSearchParams(window.location.search).get('id');
+  let me = null, conversation = null, otherProfile = null, channel = null;
+  let currentDeal = null, dealChannel = null, paymentProofData = null, selectedStars = 0;
+
+  function esc(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+  function initials(name){ return (name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase(); }
+
+  async function init(){
+    me = await yitftGetMe();
+
+    if (!me){
+      app.innerHTML = `<div class="empty-page">Please <a href="login.html">log in</a> to view this conversation.</div>`;
+      return;
+    }
+    if (!conversationId){
+      app.innerHTML = `<div class="empty-page">No conversation selected. <a href="inbox.html">Go to Messages</a></div>`;
+      return;
+    }
+
+    const { data: c, error } = await sb.from('conversations').select('*').eq('id', conversationId).single();
+    if (error || !c){
+      app.innerHTML = `<div class="empty-page">Conversation not found.</div>`;
+      return;
+    }
+    conversation = c;
+
+    const isBrand = me.profile.role === 'brand';
+    const otherId = isBrand ? c.creator_id : c.brand_id;
+    const { data: op } = await sb.from('profiles').select('*').eq('id', otherId).single();
+    otherProfile = op;
+
+    await markRead();
+    renderShell();
+    await refreshFeed();
+    subscribeRealtime();
+    subscribeDealRealtime();
+  }
+
+  async function markRead(){
+    const isBrand = me.profile.role === 'brand';
+    const field = isBrand ? 'brand_last_read_at' : 'creator_last_read_at';
+    await sb.from('conversations').update({ [field]: new Date().toISOString() }).eq('id', conversationId);
+    if (window.yitftRenderNav) window.yitftRenderNav();
+  }
+
+  function iBlocked(){
+    const isBrand = me.profile.role === 'brand';
+    return isBrand ? conversation.blocked_by_brand : conversation.blocked_by_creator;
+  }
+  function theyBlocked(){
+    const isBrand = me.profile.role === 'brand';
+    return isBrand ? conversation.blocked_by_creator : conversation.blocked_by_brand;
+  }
+
+  function renderShell(){
+    const blocked = iBlocked() || theyBlocked();
+    app.innerHTML = `
+      <div class="chat-head">
+        <a class="back" href="inbox.html">←</a>
+        <div class="cavatar">${otherProfile.photo ? `<img src="${otherProfile.photo}">` : initials(otherProfile.name)}</div>
+        <div class="info">
+          <div class="name">${esc(otherProfile.name)}</div>
+          <div class="sub">${esc(otherProfile.role === 'creator' ? (otherProfile.niche || '') : (otherProfile.category || ''))}</div>
+        </div>
+        <div class="head-actions">
+          <button class="icon-btn" id="blockBtn">${iBlocked() ? 'Unblock' : 'Block'}</button>
+          <button class="icon-btn danger" id="reportBtn">Report</button>
+          <button class="icon-btn danger" id="deleteBtn">Delete</button>
+        </div>
+      </div>
+      <div class="messages" id="messagesBox"><div class="loading">Loading messages...</div></div>
+      ${blocked ? `<div class="blocked-note">${iBlocked() ? "You've blocked this conversation. Unblock to send messages." : "This conversation is restricted."}</div>` : ''}
+      <div class="composer">
+        <input id="msgInput" type="text" placeholder="Type a message..." ${blocked ? 'disabled' : ''} onkeydown="if(event.key==='Enter') sendMessage()">
+        <button id="sendBtn" ${blocked ? 'disabled' : ''} onclick="sendMessage()">Send</button>
+      </div>
+    `;
+    document.getElementById('blockBtn').onclick = toggleBlock;
+    document.getElementById('reportBtn').onclick = openReport;
+    document.getElementById('deleteBtn').onclick = deleteConversation;
+  }
+
+  function isBrandView(){ return me.profile.role === 'brand'; }
+
+  // Fetches messages + the latest deal together, and renders them in one
+  // chronological feed — the deal card sits inline like a special message.
+  async function refreshFeed(){
+    const [{ data: msgs }, { data: deals }] = await Promise.all([
+      sb.from('messages').select('*').eq('conversation_id', conversationId).order('created_at', { ascending: true }),
+      sb.from('deals').select('*').eq('conversation_id', conversationId).order('created_at', { ascending: false }).limit(1)
+    ]);
+    currentDeal = (deals && deals.length) ? deals[0] : null;
+    renderFeed(msgs || []);
+    renderSendOfferButton();
+  }
+
+  function renderFeed(msgs){
+    const box = document.getElementById('messagesBox');
+    const items = msgs.map(m => ({ type: 'message', time: m.created_at, html: bubbleHTML(m) }));
+    if (currentDeal) items.push({ type: 'deal', time: currentDeal.created_at, html: dealCardHTML(currentDeal) });
+    items.sort((a, b) => new Date(a.time) - new Date(b.time));
+
+    if (items.length === 0){
+      box.innerHTML = `<div class="empty-chat">No messages yet. Say hello 👋</div>`;
+      return;
+    }
+    box.innerHTML = items.map(it => it.html).join('');
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function bubbleHTML(m){
+    const mine = m.sender_id === me.session.user.id;
+    const time = new Date(m.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    return `<div class="bubble ${mine?'mine':'theirs'}">${esc(m.content)}<span class="bubble-time">${time}</span></div>`;
+  }
+
+  function subscribeRealtime(){
+    channel = sb.channel('chat-' + conversationId)
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'messages',
+        filter: 'conversation_id=eq.' + conversationId
+      }, payload => {
+        const box = document.getElementById('messagesBox');
+        if (box.querySelector('.empty-chat')) box.innerHTML = '';
+        box.insertAdjacentHTML('beforeend', bubbleHTML(payload.new));
+        box.scrollTop = box.scrollHeight;
+        if (payload.new.sender_id !== me.session.user.id) markRead();
+      })
+      .subscribe();
+  }
+
+  async function sendMessage(){
+    const input = document.getElementById('msgInput');
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+    document.getElementById('sendBtn').disabled = true;
+
+    const { error } = await sb.from('messages').insert({
+      conversation_id: conversationId,
+      sender_id: me.session.user.id,
+      content: text
+    });
+    if (!error) await markRead();
+    document.getElementById('sendBtn').disabled = iBlocked() || theyBlocked();
+    if (error) alert('Message could not be sent: ' + error.message);
+  }
+
+  async function toggleBlock(){
+    const isBrand = me.profile.role === 'brand';
+    const field = isBrand ? 'blocked_by_brand' : 'blocked_by_creator';
+    const newVal = !iBlocked();
+    await sb.from('conversations').update({ [field]: newVal }).eq('id', conversationId);
+    conversation[field] = newVal;
+    renderShell();
+    refreshFeed();
+  }
+
+  async function deleteConversation(){
+    if (!confirm('Delete this conversation from your inbox? The other person will still have it.')) return;
+    const isBrand = me.profile.role === 'brand';
+    const field = isBrand ? 'deleted_by_brand' : 'deleted_by_creator';
+    await sb.from('conversations').update({ [field]: true }).eq('id', conversationId);
+    window.location.href = 'inbox.html';
+  }
+
+  function openReport(){ document.getElementById('reportOverlay').classList.add('visible'); }
+  function closeReport(){ document.getElementById('reportOverlay').classList.remove('visible'); }
+
+  async function submitReport(){
+    const reason = document.getElementById('reportReason').value;
+    const details = document.getElementById('reportDetails').value.trim();
+    const msgBox = document.getElementById('reportMsg');
+    if (!reason){
+      msgBox.textContent = 'Please select a reason.';
+      msgBox.className = 'modal-msg';
+      msgBox.style.display = 'block';
+      return;
+    }
+    const { error } = await sb.from('reports').insert({
+      reporter_id: me.session.user.id,
+      reported_id: otherProfile.id,
+      conversation_id: conversationId,
+      reason, details
+    });
+    if (error){
+      msgBox.textContent = error.message;
+      msgBox.className = 'modal-msg';
+    } else {
+      msgBox.textContent = 'Report submitted. Thank you for helping keep YITFT safe.';
+      msgBox.className = 'modal-msg ok';
+      setTimeout(closeReport, 1800);
+    }
+    msgBox.style.display = 'block';
+  }
+
+  // ============================================================
+  // DEAL SYSTEM — offer → payment → work → approval → payout
+  //
+  // Either side can start a deal:
+  //  - Brand sends an offer WITH payment attached (can't send without paying)
+  //  - Creator proposes an offer; brand must "Pay & Accept" or "Decline"
+  // Either way, once payment is submitted, YITFT (admin) verifies it
+  // before the creator starts working.
+  // ============================================================
+
+  function dealCardHTML(d){
+    const amountStr = 'Rs ' + Number(d.amount).toLocaleString();
+    const isBrand = isBrandView();
+    let statusLabel = '', statusClass = '', actionsHTML = '';
+
+    if (d.status === 'offer_sent'){
+      statusLabel = 'Offer sent'; statusClass = 'pending';
+      if (isBrand){
+        actionsHTML = `<button class="deal-btn primary" onclick="openPaymentModal()">Pay &amp; Accept</button>
+                        <button class="deal-btn ghost" onclick="declineOffer()">Decline</button>`;
+      } else {
+        actionsHTML = `<div class="deal-note">Waiting for ${esc(otherProfile.name)} to review and pay.</div>`;
+      }
+    } else if (d.status === 'declined'){
+      statusLabel = 'Declined'; statusClass = 'declined';
+      actionsHTML = `<div class="deal-note">This offer was declined.</div>`;
+    } else if (d.status === 'payment_submitted'){
+      statusLabel = 'Payment submitted — verifying'; statusClass = 'pending';
+      actionsHTML = `<div class="deal-note">YITFT is verifying the payment. This usually takes a few hours.</div>`;
+    } else if (d.status === 'payment_verified'){
+      statusLabel = 'Payment secured 🔒'; statusClass = 'active';
+      actionsHTML = !isBrand
+        ? `<button class="deal-btn primary" onclick="openSubmissionModal()">Submit Work</button>`
+        : `<div class="deal-note">Payment verified. ${esc(otherProfile.name)} is working on it.</div>`;
+    } else if (d.status === 'submitted'){
+      statusLabel = 'Work submitted'; statusClass = 'active';
+      if (isBrand){
+        actionsHTML = `
+          <div class="deal-submission">
+            <a href="${esc(d.submission_link)}" target="_blank" rel="noopener">${esc(d.submission_link)}</a>
+            ${d.submission_note ? `<p>${esc(d.submission_note)}</p>` : ''}
+          </div>
+          <button class="deal-btn primary" onclick="approveWork()">Approve</button>`;
+      } else {
+        actionsHTML = `<div class="deal-note">Waiting for ${esc(otherProfile.name)} to review your work.</div>`;
+      }
+    } else if (d.status === 'approved'){
+      statusLabel = 'Approved — payout pending'; statusClass = 'active';
+      actionsHTML = `<div class="deal-note">YITFT will release payment to the creator shortly.</div>`;
+    } else if (d.status === 'paid_out'){
+      statusLabel = 'Completed 🎉'; statusClass = 'done';
+      actionsHTML = ratingHTML(d);
+    } else if (d.status === 'cancelled'){
+      statusLabel = 'Cancelled'; statusClass = 'declined';
+      actionsHTML = d.admin_note ? `<div class="deal-note">${esc(d.admin_note)}</div>` : '';
+    }
+
+    return `
+      <div class="deal-card ${statusClass === 'declined' ? 'declined' : ''}" id="dealCardInline">
+        <div class="deal-top">
+          <span class="deal-num">${esc(d.deal_number)} · ${d.initiated_by === 'brand' ? 'Sent by brand' : 'Proposed by creator'}</span>
+          <span class="deal-status ${statusClass}">${statusLabel}</span>
+        </div>
+        <div class="deal-title">${esc(d.title)}</div>
+        ${d.description ? `<div class="deal-desc">${esc(d.description)}</div>` : ''}
+        <div class="deal-amount">${amountStr}${d.deadline ? ' · Due ' + esc(d.deadline) : ''}</div>
+        <div class="deal-actions">${actionsHTML}</div>
+      </div>`;
+  }
+
+  function ratingHTML(d){
+    const field = isBrandView() ? 'creator_rating' : 'brand_rating';
+    if (d[field] !== null && d[field] !== undefined){
+      return `<div class="deal-note">You rated this deal ${d[field]}★. Thank you!</div>`;
+    }
+    return `<button class="deal-btn primary" onclick="openRatingModal()">Rate this deal</button>`;
+  }
+
+  // Small "Send Offer" button in the header — visible when there's no
+  // active deal in progress (or the last one finished/was declined).
+  function renderSendOfferButton(){
+    const headActions = document.querySelector('.head-actions');
+    if (!headActions) return;
+    const existing = document.getElementById('sendOfferBtn');
+    if (existing) existing.remove();
+
+    const canSend = !currentDeal || ['declined', 'cancelled', 'paid_out'].includes(currentDeal.status);
+    if (canSend){
+      const btn = document.createElement('button');
+      btn.className = 'icon-btn';
+      btn.id = 'sendOfferBtn';
+      btn.style.color = 'var(--green-dark)';
+      btn.style.borderColor = 'var(--green)';
+      btn.textContent = '💰 Send Offer';
+      btn.onclick = openOfferModal;
+      headActions.insertBefore(btn, headActions.firstChild);
+    }
+  }
+
+  function updateDealCardInPlace(){
+    const el = document.getElementById('dealCardInline');
+    if (el){
+      el.outerHTML = dealCardHTML(currentDeal);
+    } else {
+      refreshFeed();
+    }
+  }
+
+  function subscribeDealRealtime(){
+    dealChannel = sb.channel('deal-' + conversationId)
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'deals',
+        filter: 'conversation_id=eq.' + conversationId
+      }, payload => {
+        if (payload.eventType === 'DELETE') return;
+        currentDeal = payload.new;
+        updateDealCardInPlace();
+        renderSendOfferButton();
+      })
+      .subscribe();
+  }
+
+  function closeModal(id){ document.getElementById(id).classList.remove('visible'); }
+
+  // ---------- Send Offer (both roles; brand also pays here) ----------
+  let offerPaymentData = null;
+
+  function openOfferModal(){
+    const isBrand = isBrandView();
+    document.getElementById('offerModalTitle').textContent = isBrand ? 'Send an offer & pay' : 'Propose an offer';
+    document.getElementById('offerModalSub').textContent = isBrand
+      ? "As the brand, you pay upfront to secure this deal. Your payment will be verified before work begins."
+      : `Propose the work and price to ${esc(otherProfile.name)}. They'll need to pay before work begins.`;
+    document.getElementById('offerPaymentSection').style.display = isBrand ? 'block' : 'none';
+    document.getElementById('offerSubmitBtn').textContent = isBrand ? 'Send Offer & Pay' : 'Send Offer';
+    offerPaymentData = null;
+    document.getElementById('offerPaymentPreview').innerHTML = '🧾';
+    document.getElementById('offerMsg').style.display = 'none';
+    document.getElementById('offerOverlay').classList.add('visible');
+  }
+
+  function resizeImageToDataURL(file, maxW, callback){
+    const reader = new FileReader();
+    reader.onload = function(ev){
+      const img = new Image();
+      img.onload = function(){
+        const scale = Math.min(1, maxW / img.width);
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        callback(canvas.toDataURL('image/jpeg', 0.8));
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function handleOfferPaymentProof(e){
+    const file = e.target.files[0];
+    if (!file) return;
+    resizeImageToDataURL(file, 500, (dataUrl) => {
+      offerPaymentData = dataUrl;
+      document.getElementById('offerPaymentPreview').innerHTML = `<img src="${dataUrl}">`;
+    });
+  }
+
+  async function submitOffer(){
+    const title = document.getElementById('offerTitle').value.trim();
+    const desc = document.getElementById('offerDesc').value.trim();
+    const amount = parseFloat(document.getElementById('offerAmount').value);
+    const deadline = document.getElementById('offerDeadline').value || null;
+    const msgBox = document.getElementById('offerMsg');
+    const isBrand = isBrandView();
+
+    if (!title || !amount || amount <= 0){
+      msgBox.textContent = 'Please add a title and a valid amount.';
+      msgBox.className = 'modal-msg'; msgBox.style.display = 'block';
+      return;
+    }
+
+    const dealData = {
+      conversation_id: conversationId,
+      brand_id: isBrand ? me.session.user.id : otherProfile.id,
+      creator_id: isBrand ? otherProfile.id : me.session.user.id,
+      title, description: desc, amount, deadline,
+      initiated_by: isBrand ? 'brand' : 'creator'
+    };
+
+    if (isBrand){
+      const note = document.getElementById('offerPaymentNote').value.trim();
+      if (!note){
+        msgBox.textContent = "Please add your payment note — an offer can't be sent without payment.";
+        msgBox.className = 'modal-msg'; msgBox.style.display = 'block';
+        return;
+      }
+      dealData.status = 'payment_submitted';
+      dealData.payment_note = note;
+      dealData.payment_proof = offerPaymentData;
+    } else {
+      dealData.status = 'offer_sent';
+    }
+
+    const { data, error } = await sb.from('deals').insert(dealData).select().single();
+    if (error){
+      msgBox.textContent = error.message;
+      msgBox.className = 'modal-msg'; msgBox.style.display = 'block';
+      return;
+    }
+    closeModal('offerOverlay');
+    ['offerTitle','offerDesc','offerAmount','offerDeadline','offerPaymentNote'].forEach(id => document.getElementById(id).value = '');
+    currentDeal = data;
+    await markRead();
+    await refreshFeed();
+  }
+
+  // ---------- Decline (brand declining a creator's proposal) ----------
+  async function declineOffer(){
+    if (!confirm('Decline this offer?')) return;
+    const { data, error } = await sb.from('deals').update({ status: 'declined' }).eq('id', currentDeal.id).select().single();
+    if (error){ alert(error.message); return; }
+    currentDeal = data;
+    await markRead();
+    await refreshFeed();
+  }
+
+  // ---------- Payment (brand paying for a creator-proposed offer) ----------
+  function openPaymentModal(){
+    paymentProofData = null;
+    document.getElementById('paymentPreview').innerHTML = '🧾';
+    document.getElementById('paymentNote').value = '';
+    document.getElementById('paymentMsg').style.display = 'none';
+    document.getElementById('paymentOverlay').classList.add('visible');
+  }
+
+  function handlePaymentProof(e){
+    const file = e.target.files[0];
+    if (!file) return;
+    resizeImageToDataURL(file, 500, (dataUrl) => {
+      paymentProofData = dataUrl;
+      document.getElementById('paymentPreview').innerHTML = `<img src="${dataUrl}">`;
+    });
+  }
+
+  async function submitPayment(){
+    const note = document.getElementById('paymentNote').value.trim();
+    const msgBox = document.getElementById('paymentMsg');
+    if (!note){
+      msgBox.textContent = 'Please add the transaction ID or a short note.';
+      msgBox.className = 'modal-msg'; msgBox.style.display = 'block';
+      return;
+    }
+    const { data, error } = await sb.from('deals').update({
+      status: 'payment_submitted',
+      payment_note: note,
+      payment_proof: paymentProofData
+    }).eq('id', currentDeal.id).select().single();
+
+    if (error){
+      msgBox.textContent = error.message;
+      msgBox.className = 'modal-msg'; msgBox.style.display = 'block';
+      return;
+    }
+    closeModal('paymentOverlay');
+    currentDeal = data;
+    await markRead();
+    await refreshFeed();
+  }
+
+  // ---------- Work submission (creator) ----------
+  function openSubmissionModal(){
+    document.getElementById('subLink').value = '';
+    document.getElementById('subNote').value = '';
+    document.getElementById('subMsg').style.display = 'none';
+    document.getElementById('submissionOverlay').classList.add('visible');
+  }
+
+  async function submitWork(){
+    const link = document.getElementById('subLink').value.trim();
+    const note = document.getElementById('subNote').value.trim();
+    const msgBox = document.getElementById('subMsg');
+    if (!link){
+      msgBox.textContent = 'Please add a link to your content.';
+      msgBox.className = 'modal-msg'; msgBox.style.display = 'block';
+      return;
+    }
+    const { data, error } = await sb.from('deals').update({
+      status: 'submitted', submission_link: link, submission_note: note
+    }).eq('id', currentDeal.id).select().single();
+
+    if (error){
+      msgBox.textContent = error.message;
+      msgBox.className = 'modal-msg'; msgBox.style.display = 'block';
+      return;
+    }
+    closeModal('submissionOverlay');
+    currentDeal = data;
+    await markRead();
+    await refreshFeed();
+  }
+
+  // ---------- Approve (brand) ----------
+  async function approveWork(){
+    if (!confirm('Approve this work? YITFT will be notified to release payment to the creator.')) return;
+    const { data, error } = await sb.from('deals').update({ status: 'approved' }).eq('id', currentDeal.id).select().single();
+    if (error){ alert(error.message); return; }
+    currentDeal = data;
+    await markRead();
+    await refreshFeed();
+  }
+
+  // ---------- Rating (both, after payout) ----------
+  function openRatingModal(){
+    selectedStars = 0;
+    renderStars();
+    document.getElementById('ratingReview').value = '';
+    document.getElementById('ratingMsg').style.display = 'none';
+    document.getElementById('ratingOverlay').classList.add('visible');
+  }
+  function renderStars(){
+    document.getElementById('starsPicker').innerHTML = [1,2,3,4,5].map(n =>
+      `<span class="star-pick ${n <= selectedStars ? 'filled' : ''}" onclick="pickStar(${n})">★</span>`
+    ).join('');
+  }
+  function pickStar(n){ selectedStars = n; renderStars(); }
+
+  async function submitRating(){
+    const review = document.getElementById('ratingReview').value.trim();
+    const msgBox = document.getElementById('ratingMsg');
+    if (selectedStars === 0){
+      msgBox.textContent = 'Please select a star rating.';
+      msgBox.className = 'modal-msg'; msgBox.style.display = 'block';
+      return;
+    }
+    const field = isBrandView() ? 'creator_rating' : 'brand_rating';
+    const reviewField = isBrandView() ? 'creator_review' : 'brand_review';
+    const { data, error } = await sb.from('deals').update({
+      [field]: selectedStars, [reviewField]: review
+    }).eq('id', currentDeal.id).select().single();
+
+    if (error){
+      msgBox.textContent = error.message;
+      msgBox.className = 'modal-msg'; msgBox.style.display = 'block';
+      return;
+    }
+    closeModal('ratingOverlay');
+    currentDeal = data;
+    await markRead();
+    await refreshFeed();
+  }
+
+  window.addEventListener('beforeunload', () => {
+    if (channel) sb.removeChannel(channel);
+    if (dealChannel) sb.removeChannel(dealChannel);
+  });
+  init();
+</script>
+
+</body>
+</html>

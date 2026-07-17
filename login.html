@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Log In — YITFT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B1B2B; --slate:#5A6B7C; --green:#0E9F6E; --green-dark:#0B7A55;
+    --green-soft:#E6F6F0; --bg-soft:#F6F8FA; --line:#E4E9EE;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Inter',sans-serif;color:var(--ink);background:var(--bg-soft);line-height:1.6;min-height:100vh}
+  h1{font-family:'Sora',sans-serif;letter-spacing:-.02em}
+  nav{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;background:#fff;border-bottom:1px solid var(--line)}
+  .logo{font-family:'Sora';font-weight:800;font-size:1.25rem;text-decoration:none;color:var(--ink)}
+  .logo span{color:var(--green)}
+  nav a.plain{color:var(--slate);text-decoration:none;font-size:.9rem;font-weight:500}
+  nav a.plain:hover{color:var(--ink)}
+
+  .card{
+    background:#fff;border:1px solid var(--line);border-radius:18px;
+    padding:40px 36px;max-width:420px;margin:70px auto;
+  }
+  .card h1{font-size:1.5rem;margin-bottom:6px}
+  .card .sub{color:var(--slate);font-size:.92rem;margin-bottom:26px}
+  .field{margin-bottom:16px}
+  label{display:block;font-size:.86rem;font-weight:600;margin-bottom:6px}
+  input{
+    width:100%;border:1.5px solid var(--line);border-radius:10px;
+    padding:12px 14px;font-family:'Inter';font-size:.94rem;outline:none;
+  }
+  input:focus{border-color:var(--green)}
+  button{
+    width:100%;background:var(--green);color:#fff;border:none;cursor:pointer;
+    font-family:'Inter';font-weight:600;font-size:1rem;padding:14px;border-radius:10px;
+    margin-top:8px;transition:background .15s;
+  }
+  button:hover{background:var(--green-dark)}
+  button:disabled{background:var(--slate);cursor:wait}
+  .error{
+    display:none;background:#FDEDEB;border:1px solid #F0B9B1;color:#B03A2E;
+    border-radius:10px;padding:12px 16px;font-size:.88rem;margin-top:14px;
+  }
+  .foot{text-align:center;font-size:.88rem;color:var(--slate);margin-top:20px}
+  .foot a{color:var(--green-dark);font-weight:600;text-decoration:none}
+  @media (max-width:500px){.card{margin:40px 16px;padding:30px 22px}}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="index.html">YIT<span>FT</span></a>
+  <a class="plain" href="signup.html">New here? Sign up</a>
+</nav>
+
+<div class="card">
+  <h1>Welcome back</h1>
+  <p class="sub">Log in to your YITFT account.</p>
+
+  <form onsubmit="doLogin(event)">
+    <div class="field">
+      <label for="email">Email</label>
+      <input id="email" type="email" required placeholder="you@example.com">
+    </div>
+    <div class="field">
+      <label for="password">Password</label>
+      <input id="password" type="password" required placeholder="Your password">
+    </div>
+    <div class="error" id="errBox"></div>
+    <button type="submit" id="loginBtn">Log in</button>
+  </form>
+
+  <p class="foot">Don't have an account? <a href="signup.html">Sign up free</a></p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="yitft-config.js"></script>
+<script>
+  async function doLogin(e){
+    e.preventDefault();
+    const btn = document.getElementById('loginBtn');
+    const errBox = document.getElementById('errBox');
+    errBox.style.display = 'none';
+    btn.disabled = true; btn.textContent = "Logging in...";
+
+    const { error } = await sb.auth.signInWithPassword({
+      email: document.getElementById('email').value.trim(),
+      password: document.getElementById('password').value
+    });
+
+    if (error){
+      errBox.textContent = error.message.includes('Invalid')
+        ? "Wrong email or password. Please try again."
+        : error.message;
+      errBox.style.display = 'block';
+      btn.disabled = false; btn.textContent = "Log in";
+      return;
+    }
+
+    // Login successful — go to profile
+    window.location.href = "profile.html";
+  }
+</script>
+
+</body>
+</html>

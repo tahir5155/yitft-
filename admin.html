@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — YITFT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B1B2B; --slate:#5A6B7C; --green:#0E9F6E; --green-dark:#0B7A55;
+    --green-soft:#E6F6F0; --bg-soft:#F6F8FA; --line:#E4E9EE;
+    --red:#E23B3B; --red-soft:#FDEDEB; --gold:#D9A400; --gold-soft:#FFF6E0;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Inter',sans-serif;color:var(--ink);background:var(--bg-soft);line-height:1.6;min-height:100vh}
+  h1,h2,h3{font-family:'Sora',sans-serif;letter-spacing:-.02em;line-height:1.15}
+  .wrap{max-width:900px;margin:0 auto;padding:0 20px}
+
+  .page-head{padding:40px 0 8px}
+  .page-head h1{font-size:1.7rem;margin-bottom:6px}
+  .page-head p{color:var(--slate);font-size:.95rem}
+
+  .tabs{display:flex;gap:8px;margin:24px 0 20px;border-bottom:1px solid var(--line)}
+  .tab{
+    padding:10px 18px;font-size:.9rem;font-weight:600;color:var(--slate);
+    cursor:pointer;border-bottom:2px solid transparent;
+  }
+  .tab.active{color:var(--green-dark);border-bottom-color:var(--green)}
+  .tab .count{
+    background:var(--bg-soft);color:var(--slate);font-size:.72rem;font-weight:700;
+    padding:1px 7px;border-radius:99px;margin-left:6px;
+  }
+  .tab.active .count{background:var(--green-soft);color:var(--green-dark)}
+
+  .loading{text-align:center;padding:60px;color:var(--slate)}
+  .empty{background:#fff;border:1px dashed var(--line);border-radius:16px;padding:50px 30px;text-align:center;color:var(--slate)}
+  .denied{text-align:center;padding:100px 20px;color:var(--slate)}
+
+  .deal-row{
+    background:#fff;border:1px solid var(--line);border-radius:16px;
+    padding:22px 24px;margin-bottom:16px;
+  }
+  .row-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
+  .row-num{font-size:.75rem;color:var(--slate);font-weight:600}
+  .row-title{font-family:'Sora';font-weight:700;font-size:1.05rem;margin-top:2px}
+  .row-amount{font-family:'Sora';font-weight:800;font-size:1.2rem;color:var(--green-dark)}
+
+  .parties{display:flex;gap:24px;margin-bottom:16px;flex-wrap:wrap}
+  .party{font-size:.85rem}
+  .party .label{color:var(--slate);font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;font-weight:600}
+  .party .name{font-weight:600;margin-top:2px}
+
+  .proof-box{
+    background:var(--bg-soft);border-radius:12px;padding:14px 16px;margin-bottom:16px;
+    display:flex;gap:14px;align-items:flex-start;
+  }
+  .proof-box .note{font-size:.86rem;flex:1}
+  .proof-box .note b{display:block;font-size:.72rem;color:var(--slate);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;font-weight:600}
+  .proof-img{width:90px;height:90px;border-radius:8px;object-fit:cover;flex-shrink:0;cursor:pointer;border:1px solid var(--line)}
+
+  .submission-box{
+    background:var(--bg-soft);border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:.86rem;
+  }
+  .submission-box a{color:var(--green-dark);font-weight:600;word-break:break-all}
+
+  .row-actions{display:flex;gap:10px;flex-wrap:wrap}
+  .act-btn{
+    border:none;border-radius:9px;padding:10px 18px;font-family:'Inter';font-weight:600;
+    font-size:.87rem;cursor:pointer;
+  }
+  .act-btn.approve{background:var(--green);color:#fff}
+  .act-btn.approve:hover{background:var(--green-dark)}
+  .act-btn.reject{background:#fff;color:var(--red);border:1.5px solid #F0B9B1}
+  .act-btn.reject:hover{background:var(--red-soft)}
+
+  /* Lightbox for viewing full-size proof screenshots */
+  .lightbox{
+    display:none;position:fixed;inset:0;background:rgba(11,27,43,.85);
+    align-items:center;justify-content:center;z-index:100;padding:30px;cursor:zoom-out;
+  }
+  .lightbox.visible{display:flex}
+  .lightbox img{max-width:90%;max-height:90%;border-radius:8px}
+
+  .msg{border-radius:10px;padding:12px 16px;font-size:.86rem;margin-top:12px;display:none}
+  .msg.err{background:var(--red-soft);color:var(--red)}
+</style>
+</head>
+<body>
+
+<div id="yitftNav"></div>
+
+<div class="wrap">
+  <div class="page-head">
+    <h1>Admin — Deal Verification</h1>
+    <p>Verify incoming payments and release payouts for completed work.</p>
+  </div>
+  <div id="app"><div class="loading">Loading...</div></div>
+</div>
+
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('visible')">
+  <img id="lightboxImg" src="">
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="yitft-config.js"></script>
+<script src="yitft-notif.js"></script>
+<script src="yitft-nav.js"></script>
+<script>
+  const app = document.getElementById('app');
+  let allDeals = [];
+  let activeTab = 'payments';
+
+  function esc(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+
+  async function init(){
+    const me = await yitftGetMe();
+    if (!me){
+      app.innerHTML = `<div class="denied">Please <a href="login.html">log in</a>.</div>`;
+      return;
+    }
+    if (!me.profile.is_admin){
+      app.innerHTML = `<div class="denied">🔒 This page is for YITFT admins only.</div>`;
+      return;
+    }
+
+    const { data, error } = await sb.from('deals')
+      .select('*, brand:brand_id(name, city), creator:creator_id(name, city)')
+      .in('status', ['payment_submitted', 'approved'])
+      .order('created_at', { ascending: true });
+
+    if (error){
+      app.innerHTML = `<div class="empty">Could not load deals.<br><small>${esc(error.message)}</small></div>`;
+      return;
+    }
+
+    allDeals = data || [];
+    render();
+  }
+
+  function render(){
+    const payments = allDeals.filter(d => d.status === 'payment_submitted');
+    const payouts = allDeals.filter(d => d.status === 'approved');
+
+    let html = `
+      <div class="tabs">
+        <div class="tab ${activeTab==='payments'?'active':''}" onclick="switchTab('payments')">
+          Pending Payments <span class="count">${payments.length}</span>
+        </div>
+        <div class="tab ${activeTab==='payouts'?'active':''}" onclick="switchTab('payouts')">
+          Pending Payouts <span class="count">${payouts.length}</span>
+        </div>
+      </div>
+    `;
+
+    const list = activeTab === 'payments' ? payments : payouts;
+
+    if (list.length === 0){
+      html += `<div class="empty">Nothing here right now. 🎉</div>`;
+    } else {
+      html += list.map(d => activeTab === 'payments' ? paymentRowHTML(d) : payoutRowHTML(d)).join('');
+    }
+
+    app.innerHTML = html;
+  }
+
+  function switchTab(tab){ activeTab = tab; render(); }
+
+  function partiesHTML(d){
+    return `
+      <div class="parties">
+        <div class="party"><div class="label">Brand</div><div class="name">${esc(d.brand?.name)} · ${esc(d.brand?.city || '')}</div></div>
+        <div class="party"><div class="label">Creator</div><div class="name">${esc(d.creator?.name)} · ${esc(d.creator?.city || '')}</div></div>
+      </div>`;
+  }
+
+  function paymentRowHTML(d){
+    return `
+      <div class="deal-row">
+        <div class="row-top">
+          <div>
+            <div class="row-num">${esc(d.deal_number)} · ${d.initiated_by === 'brand' ? 'Sent by brand' : 'Proposed by creator'}</div>
+            <div class="row-title">${esc(d.title)}</div>
+          </div>
+          <div class="row-amount">Rs ${Number(d.amount).toLocaleString()}</div>
+        </div>
+        ${partiesHTML(d)}
+        <div class="proof-box">
+          ${d.payment_proof ? `<img class="proof-img" src="${d.payment_proof}" onclick="showImage('${d.payment_proof}')">` : ''}
+          <div class="note">
+            <b>Payment note from brand</b>
+            ${esc(d.payment_note || 'No note provided')}
+          </div>
+        </div>
+        <div class="row-actions">
+          <button class="act-btn approve" onclick="verifyPayment('${d.id}')">✓ Verify Payment</button>
+          <button class="act-btn reject" onclick="rejectPayment('${d.id}')">Reject</button>
+        </div>
+        <div class="msg err" id="msg-${d.id}"></div>
+      </div>`;
+  }
+
+  function payoutRowHTML(d){
+    return `
+      <div class="deal-row">
+        <div class="row-top">
+          <div>
+            <div class="row-num">${esc(d.deal_number)}</div>
+            <div class="row-title">${esc(d.title)}</div>
+          </div>
+          <div class="row-amount">Rs ${Number(d.amount).toLocaleString()}</div>
+        </div>
+        ${partiesHTML(d)}
+        <div class="submission-box">
+          <b style="display:block;font-size:.72rem;color:var(--slate);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">Approved work</b>
+          <a href="${esc(d.submission_link)}" target="_blank" rel="noopener">${esc(d.submission_link)}</a>
+          ${d.submission_note ? `<p style="color:var(--slate);margin-top:6px">${esc(d.submission_note)}</p>` : ''}
+        </div>
+        <div class="row-actions">
+          <button class="act-btn approve" onclick="markPaidOut('${d.id}')">✓ Mark as Paid Out</button>
+        </div>
+        <div class="msg err" id="msg-${d.id}"></div>
+      </div>`;
+  }
+
+  function showImage(src){
+    document.getElementById('lightboxImg').src = src;
+    document.getElementById('lightbox').classList.add('visible');
+  }
+
+  async function verifyPayment(id){
+    if (!confirm('Confirm you have checked your JazzCash/bank account and this payment has arrived?')) return;
+    const { error } = await sb.from('deals').update({ status: 'payment_verified' }).eq('id', id);
+    if (error){ showRowError(id, error.message); return; }
+    allDeals = allDeals.filter(d => d.id !== id);
+    render();
+    if (window.yitftRenderNav) window.yitftRenderNav();
+  }
+
+  async function rejectPayment(id){
+    const note = prompt("Why is this payment being rejected? (This note is saved for the record.)");
+    if (note === null) return;
+    const { error } = await sb.from('deals').update({ status: 'declined', admin_note: note || 'Payment could not be verified.' }).eq('id', id);
+    if (error){ showRowError(id, error.message); return; }
+    allDeals = allDeals.filter(d => d.id !== id);
+    render();
+    if (window.yitftRenderNav) window.yitftRenderNav();
+  }
+
+  async function markPaidOut(id){
+    if (!confirm("Confirm you have sent the creator's payment via JazzCash/bank transfer?")) return;
+    const { error } = await sb.from('deals').update({ status: 'paid_out' }).eq('id', id);
+    if (error){ showRowError(id, error.message); return; }
+    allDeals = allDeals.filter(d => d.id !== id);
+    render();
+    if (window.yitftRenderNav) window.yitftRenderNav();
+  }
+
+  function showRowError(id, msg){
+    const box = document.getElementById('msg-' + id);
+    if (box){ box.textContent = msg; box.style.display = 'block'; }
+  }
+
+  init();
+</script>
+
+</body>
+</html>

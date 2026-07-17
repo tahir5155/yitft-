@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Browse Creators — YITFT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B1B2B; --slate:#5A6B7C; --green:#0E9F6E; --green-dark:#0B7A55;
+    --green-soft:#E6F6F0; --bg-soft:#F6F8FA; --line:#E4E9EE;
+    --gold:#D9A400; --gold-soft:#FFF6E0; --purple:#6D5AE6; --purple-soft:#EEEBFC;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Inter',sans-serif;color:var(--ink);background:var(--bg-soft);line-height:1.6;min-height:100vh}
+  h1,h2,h3{font-family:'Sora',sans-serif;letter-spacing:-.02em;line-height:1.15}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+
+  .page-head{padding:40px 0 8px}
+  .page-head h1{font-size:1.7rem;margin-bottom:6px}
+  .page-head p{color:var(--slate);font-size:.95rem}
+
+  .filters{
+    display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:12px;
+    background:#fff;border:1px solid var(--line);border-radius:14px;
+    padding:16px;margin:22px 0 10px;
+  }
+  .filters input,.filters select{
+    width:100%;border:1.5px solid var(--line);border-radius:10px;
+    padding:11px 13px;font-family:'Inter';font-size:.9rem;color:var(--ink);
+    outline:none;background:#fff;
+  }
+  .filters input:focus,.filters select:focus{border-color:var(--green)}
+  .result-count{font-size:.85rem;color:var(--slate);margin:10px 2px 18px}
+
+  .new-strip{margin:6px 0 26px}
+  .new-strip h2{font-size:1.05rem;margin-bottom:4px}
+  .new-strip .sub{font-size:.83rem;color:var(--slate);margin-bottom:14px}
+  .new-row{display:flex;gap:14px;overflow-x:auto;padding-bottom:8px}
+  .new-card{flex:0 0 210px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;text-align:center}
+  .new-card .cavatar{margin:0 auto 10px}
+  .new-card .name{font-family:'Sora';font-weight:700;font-size:.95rem}
+  .new-card .meta{font-size:.78rem;color:var(--slate);margin-bottom:8px}
+
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;padding-bottom:70px}
+  .ccard{
+    background:#fff;border:1px solid var(--line);border-radius:16px;
+    padding:24px 22px;transition:all .15s ease;position:relative;
+  }
+  .ccard:hover{box-shadow:0 10px 30px rgba(11,27,43,.08);transform:translateY(-2px)}
+  .ccard.boosted{border:1.5px solid var(--purple)}
+  .corner-badges{position:absolute;top:14px;right:14px;display:flex;gap:6px}
+  .mini-badge{font-size:.68rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:4px 10px;border-radius:99px}
+  .mini-badge.you{background:var(--gold-soft);color:var(--gold)}
+  .mini-badge.boost{background:var(--purple-soft);color:var(--purple)}
+  .mini-badge.sample{background:var(--bg-soft);color:var(--slate);border:1px solid var(--line)}
+  .ccard .top{display:flex;gap:14px;align-items:center;margin-bottom:14px}
+  .cavatar{
+    width:54px;height:54px;border-radius:50%;flex-shrink:0;overflow:hidden;
+    background:linear-gradient(135deg,var(--green),#3BC9A0);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Sora';font-weight:800;font-size:1.2rem;color:#fff;
+  }
+  .cavatar img{width:100%;height:100%;object-fit:cover}
+  .ccard .name{font-family:'Sora';font-weight:700;font-size:1.02rem}
+  .ccard .meta{font-size:.82rem;color:var(--slate)}
+  .level{display:inline-block;font-size:.7rem;font-weight:700;letter-spacing:.04em;padding:3px 10px;border-radius:99px;margin-top:4px}
+  .level.new{background:var(--bg-soft);color:var(--slate);border:1px solid var(--line)}
+  .level.l1{background:var(--green-soft);color:var(--green-dark)}
+  .level.l2{background:#E0F0FF;color:#1D6FC2}
+  .level.top{background:var(--gold-soft);color:var(--gold)}
+  .ccard .bio{font-size:.87rem;color:var(--slate);margin-bottom:16px;min-height:44px}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .chip{font-size:.76rem;font-weight:600;background:var(--bg-soft);border:1px solid var(--line);border-radius:99px;padding:4px 12px;color:var(--slate)}
+  .chip.green{background:var(--green-soft);color:var(--green-dark);border-color:transparent}
+  .ccard .bottom{display:flex;justify-content:space-between;align-items:center;padding-top:14px;border-top:1px solid var(--line)}
+  .rating{font-size:.85rem;font-weight:600}
+  .rating .star{color:var(--gold)}
+  .view-btn{
+    text-decoration:none;font-size:.85rem;font-weight:600;color:var(--green-dark);
+    border:1.5px solid var(--green);padding:8px 16px;border-radius:9px;transition:all .15s;cursor:pointer;
+  }
+  .view-btn:hover{background:var(--green-soft)}
+  .msg-btn{
+    text-decoration:none;font-size:.85rem;font-weight:600;color:#fff;
+    background:var(--green);padding:8px 16px;border-radius:9px;transition:all .15s;
+    border:1.5px solid var(--green);cursor:pointer;
+  }
+  .msg-btn:hover{background:var(--green-dark)}
+  .btn-row-inline{display:flex;gap:8px}
+  .no-results{grid-column:1/-1;text-align:center;padding:60px 20px;background:#fff;border:1px dashed var(--line);border-radius:16px;color:var(--slate)}
+  .loading{text-align:center;padding:60px;color:var(--slate);grid-column:1/-1}
+
+  @media (max-width:920px){.grid{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width:640px){
+    .grid{grid-template-columns:1fr}
+    .filters{grid-template-columns:1fr 1fr}
+    .filters input{grid-column:1/-1}
+  }
+</style>
+</head>
+<body>
+
+<div id="yitftNav"></div>
+
+<div class="wrap">
+  <div class="page-head">
+    <h1>Browse Creators</h1>
+    <p>Find the right creator for your next campaign. Filter by niche, city, and audience size.</p>
+  </div>
+
+  <div class="filters">
+    <input id="fSearch" type="text" placeholder="Search by name or username..." oninput="applyFilters()">
+    <select id="fNiche" onchange="applyFilters()">
+      <option value="">All niches</option>
+      <option>Fashion & Beauty</option>
+      <option>Food</option>
+      <option>Comedy & Entertainment</option>
+      <option>Tech & Gaming</option>
+      <option>Education</option>
+      <option>Fitness & Sports</option>
+      <option>Vlogs & Lifestyle</option>
+      <option>Other</option>
+    </select>
+    <select id="fCity" onchange="applyFilters()"><option value="">All cities</option></select>
+    <select id="fFollowers" onchange="applyFilters()">
+      <option value="">Any followers</option>
+      <option>1K – 10K</option>
+      <option>10K – 50K</option>
+      <option>50K – 200K</option>
+      <option>200K – 1M</option>
+      <option>1M+</option>
+    </select>
+  </div>
+
+  <div class="new-strip" id="newStrip"></div>
+  <div class="result-count" id="resultCount"></div>
+  <div class="grid" id="grid"><div class="loading">Loading creators...</div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="yitft-config.js"></script>
+<script src="yitft-notif.js"></script>
+<script src="yitft-nav.js"></script>
+<script>
+  // ============================================================
+  // LIVE MODE — creators ab database se aate hain.
+  //
+  // SAMPLE creators bhi shamil hain (SHOW_SAMPLES = true) taake
+  // page bhara dikhe jab tak real users kam hain. Launch se
+  // pehle isay false kar dena — sirf real creators dikhenge.
+  // ============================================================
+
+  const SHOW_SAMPLES = true;
+
+  const PK_CITIES = {
+    "Punjab": ["Lahore","Faisalabad","Rawalpindi","Multan","Gujranwala","Sialkot","Bahawalpur","Sargodha","Sahiwal","Rahim Yar Khan"],
+    "Sindh": ["Karachi","Hyderabad","Sukkur","Larkana","Nawabshah"],
+    "Khyber Pakhtunkhwa": ["Peshawar","Mardan","Abbottabad","Swat","Dera Ismail Khan"],
+    "Balochistan": ["Quetta","Gwadar","Turbat"],
+    "Islamabad Capital Territory": ["Islamabad"],
+    "Azad Jammu & Kashmir": ["Muzaffarabad","Mirpur","Rawalakot"],
+    "Gilgit-Baltistan": ["Gilgit","Skardu"],
+    "Other": ["Other city"]
+  };
+
+  const sampleCreators = [
+    {name:"Sara Ahmed", username:"sara.styles", city:"Lahore", niche:"Fashion & Beauty",
+     bio:"Daily outfit ideas and affordable fashion finds for Pakistani girls.",
+     followers:"50K – 200K", rate:"Rs 12,000 per reel", rating:4.9, deals:24, earned:460000, boosted:true, isSample:true},
+    {name:"Hamza Khan", username:"hamzaeats", city:"Karachi", niche:"Food",
+     bio:"Reviewing Karachi's street food one bun kabab at a time.",
+     followers:"200K – 1M", rate:"Rs 25,000 per video", rating:4.8, deals:48, earned:1250000, isSample:true},
+    {name:"Bilal Tech", username:"bilaltech", city:"Islamabad", niche:"Tech & Gaming",
+     bio:"Budget phone reviews and PC builds for Pakistani buyers.",
+     followers:"50K – 200K", rate:"Rs 15,000 per video", rating:4.7, deals:11, earned:180000, isSample:true},
+    {name:"Zainab Fitness", username:"zainabfit", city:"Muzaffarabad", niche:"Fitness & Sports",
+     bio:"Home workouts, halal nutrition tips, and real fitness journeys.",
+     followers:"10K – 50K", rate:"Rs 8,000 per reel", rating:4.9, deals:9, earned:95000, boosted:true, isSample:true},
+    {name:"Ali Comedy", username:"alilaughs", city:"Faisalabad", niche:"Comedy & Entertainment",
+     bio:"Desi household comedy that every Pakistani family relates to.",
+     followers:"200K – 1M", rate:"Rs 30,000 per video", rating:4.6, deals:22, earned:520000, isSample:true},
+    {name:"Usman Vlogs", username:"usmanvlogs", city:"Gilgit", niche:"Vlogs & Lifestyle",
+     bio:"Exploring the north of Pakistan — travel guides and hidden gems.",
+     followers:"50K – 200K", rate:"Rs 18,000 per video", rating:4.8, deals:13, earned:290000, isSample:true},
+  ];
+
+  let allCreators = [];
+  let myUserId = null;
+  let viewerRole = null;
+
+  function esc(s){
+    const d = document.createElement('div');
+    d.textContent = s || '';
+    return d.innerHTML;
+  }
+  function initials(name){
+    return (name||'?').split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+  }
+  function avatarHTML(c){
+    return `<div class="cavatar">${c.photo ? `<img src="${c.photo}" alt="">` : initials(c.name)}</div>`;
+  }
+
+  function getLevel(c){
+    const r = c.rating || 0;
+    const earned = c.earned || 0;
+    const deals = c.deals || 0;
+    if (earned >= 1000000 && deals >= 40 && r >= 4.8) return {key:'top', label:'Top Rated', points:40};
+    if (earned >= 400000 && deals >= 20 && r >= 4.6)  return {key:'l2', label:'Level 2', points:30};
+    if (earned >= 100000 && deals >= 5  && r >= 4.5)  return {key:'l1', label:'Level 1', points:20};
+    return {key:'new', label:'New', points:0};
+  }
+
+  const daySeed = new Date().toDateString();
+  function seededRandom(str){
+    let h = 0;
+    const s = str + daySeed;
+    for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 1000;
+    return h / 1000;
+  }
+  function score(c){
+    const level = getLevel(c).points;
+    const rating = (c.rating || 3.5) * 4;
+    const newnessBoost = (c.joinedDaysAgo !== undefined && c.joinedDaysAgo <= 30) ? 12 : 0;
+    const shuffle = seededRandom(c.username || c.name) * 8;
+    return level + rating + newnessBoost + shuffle;
+  }
+
+  async function init(){
+    // Logged-in user check (role needed for Message button logic)
+    const { data: { session } } = await sb.auth.getSession();
+    if (session){
+      myUserId = session.user.id;
+      const { data: myProfile } = await sb.from('profiles').select('role').eq('id', session.user.id).single();
+      viewerRole = myProfile ? myProfile.role : null;
+    }
+
+    // Database se sab creators lao
+    const { data: rows, error } = await sb.from('profiles')
+      .select('*').eq('role', 'creator').order('created_at', {ascending: false});
+
+    if (error){
+      document.getElementById('grid').innerHTML =
+        `<div class="no-results">Could not load creators. Check your internet — and that your key is set in yitft-config.js.<br><small>${esc(error.message)}</small></div>`;
+      return;
+    }
+
+    // Real stats (deals completed, earned, rating) for every creator, in one call
+    const { data: statsRows } = await sb.rpc('get_all_creator_stats');
+    const statsMap = {};
+    (statsRows || []).forEach(s => { statsMap[s.creator_id] = s; });
+
+    const realCreators = (rows || []).map(r => {
+      const s = statsMap[r.id] || {};
+      return {
+        id: r.id,
+        name: r.name, username: r.username, city: r.city, niche: r.niche,
+        bio: r.bio, followers: r.followers, rate: r.rate || "Rate not set",
+        photo: r.photo,
+        rating: s.avg_rating || null,
+        deals: s.completed_deals || 0,
+        earned: s.total_earned || 0,
+        isYou: r.id === myUserId,
+        joinedDaysAgo: Math.floor((Date.now() - new Date(r.created_at)) / 86400000)
+      };
+    });
+
+    allCreators = SHOW_SAMPLES ? [...realCreators, ...sampleCreators] : realCreators;
+
+    // City filter bharo
+    const citySelect = document.getElementById('fCity');
+    for (const [province, cities] of Object.entries(PK_CITIES)){
+      const group = document.createElement('optgroup');
+      group.label = province;
+      cities.forEach(city => {
+        const opt = document.createElement('option');
+        opt.textContent = city;
+        group.appendChild(opt);
+      });
+      citySelect.appendChild(group);
+    }
+
+    renderNewStrip();
+    applyFilters();
+  }
+
+  function renderNewStrip(){
+    const fresh = allCreators.filter(c => c.joinedDaysAgo !== undefined && c.joinedDaysAgo <= 30);
+    const strip = document.getElementById('newStrip');
+    if (fresh.length === 0){ strip.innerHTML = ''; return; }
+    strip.innerHTML = `
+      <h2>✨ New on YITFT</h2>
+      <div class="sub">Fresh creators — be their first brand deal. New members get this spotlight for 30 days.</div>
+      <div class="new-row">
+        ${fresh.map(c => `
+          <div class="new-card">
+            ${avatarHTML(c)}
+            <div class="name">${esc(c.name)}${c.isYou ? ' (You)' : ''}</div>
+            <div class="meta">${esc(c.niche)} · ${esc(c.city)}</div>
+            <span class="level new">New</span>
+          </div>`).join('')}
+      </div>`;
+  }
+
+  function applyFilters(){
+    const q = document.getElementById('fSearch').value.toLowerCase();
+    const niche = document.getElementById('fNiche').value;
+    const city = document.getElementById('fCity').value;
+    const followers = document.getElementById('fFollowers').value;
+
+    let filtered = allCreators.filter(c =>
+      (!q || (c.name||'').toLowerCase().includes(q) || (c.username||'').toLowerCase().includes(q)) &&
+      (!niche || c.niche === niche) &&
+      (!city || c.city === city) &&
+      (!followers || c.followers === followers)
+    );
+
+    const boosted = filtered.filter(c => c.boosted).slice(0, 2);
+    const rest = filtered.filter(c => !boosted.includes(c)).sort((a,b) => score(b) - score(a));
+    render([...boosted, ...rest]);
+  }
+
+  function render(list){
+    const grid = document.getElementById('grid');
+    document.getElementById('resultCount').textContent =
+      list.length + (list.length === 1 ? " creator found" : " creators found");
+
+    if (list.length === 0){
+      grid.innerHTML = `<div class="no-results">No creators match these filters. Try removing a filter.</div>`;
+      return;
+    }
+
+    grid.innerHTML = list.map(c => {
+      const lvl = getLevel(c);
+      return `
+      <div class="ccard ${c.boosted ? 'boosted' : ''}">
+        <div class="corner-badges">
+          ${c.boosted ? '<span class="mini-badge boost">Boosted</span>' : ''}
+          ${c.isYou ? '<span class="mini-badge you">You</span>' : ''}
+          ${c.isSample ? '<span class="mini-badge sample">Sample</span>' : ''}
+        </div>
+        <div class="top">
+          ${avatarHTML(c)}
+          <div>
+            <div class="name">${esc(c.name)}</div>
+            <div class="meta">@${esc(c.username)} · ${esc(c.city)}</div>
+            <span class="level ${lvl.key}">${lvl.label}</span>
+          </div>
+        </div>
+        <div class="bio">${esc(c.bio)}</div>
+        <div class="chips">
+          <span class="chip green">${esc(c.niche)}</span>
+          <span class="chip">${esc(c.followers)} followers</span>
+          <span class="chip">${esc(c.rate)}</span>
+        </div>
+        <div class="bottom">
+          <span class="rating">
+            ${c.rating ? `<span class="star">★</span> ${c.rating} · ${c.deals} deals` : 'No deals yet'}
+          </span>
+          <div class="btn-row-inline">
+            <a class="view-btn" href="${c.isYou ? 'profile.html' : (c.isSample || !c.id ? '#' : 'profile.html?id=' + c.id)}"
+               ${(c.isYou || (!c.isSample && c.id)) ? '' : `onclick="alert('This is sample/demo data — not a real profile yet.'); return false;"`}>
+              View profile
+            </a>
+            ${(viewerRole === 'brand' && !c.isYou && !c.isSample && c.id) ? `<button class="msg-btn" onclick="messageCreator('${c.id}')">Message</button>` : ''}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // Only brands can call this — the button itself is hidden for creators,
+  // and the database rule (RLS policy) blocks it too, as a second layer of safety.
+  async function messageCreator(creatorId){
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session){
+      alert('Please log in as a brand to message creators.');
+      window.location.href = 'login.html';
+      return;
+    }
+
+    // Check if a conversation already exists between this brand and creator
+    let { data: existing } = await sb.from('conversations')
+      .select('id').eq('brand_id', session.user.id).eq('creator_id', creatorId).maybeSingle();
+
+    let convoId = existing ? existing.id : null;
+
+    if (!convoId){
+      const { data: created, error } = await sb.from('conversations')
+        .insert({ brand_id: session.user.id, creator_id: creatorId })
+        .select('id').single();
+      if (error){
+        alert('Could not start conversation: ' + error.message);
+        return;
+      }
+      convoId = created.id;
+    }
+
+    window.location.href = 'chat.html?id=' + convoId;
+  }
+
+  init();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign Up — YITFT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B1B2B; --slate:#5A6B7C; --green:#0E9F6E; --green-dark:#0B7A55;
+    --green-soft:#E6F6F0; --bg:#FFFFFF; --bg-soft:#F6F8FA; --line:#E4E9EE; --radius:14px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Inter',sans-serif;color:var(--ink);background:var(--bg-soft);line-height:1.6;min-height:100vh}
+  h1,h2,h3{font-family:'Sora',sans-serif;letter-spacing:-.02em;line-height:1.15}
+  .wrap{max-width:640px;margin:0 auto;padding:0 20px}
+
+  nav{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;background:#fff;border-bottom:1px solid var(--line)}
+  .logo{font-family:'Sora';font-weight:800;font-size:1.25rem;text-decoration:none;color:var(--ink)}
+  .logo span{color:var(--green)}
+  nav .links{display:flex;gap:18px;align-items:center}
+  nav a.plain{color:var(--slate);text-decoration:none;font-size:.9rem;font-weight:500}
+  nav a.plain:hover{color:var(--ink)}
+
+  .page-head{text-align:center;padding:44px 0 30px}
+  .page-head h1{font-size:1.8rem;margin-bottom:8px}
+  .page-head p{color:var(--slate);font-size:.98rem}
+
+  .roles{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:40px}
+  .role{
+    background:#fff;border:2px solid var(--line);border-radius:var(--radius);
+    padding:26px 22px;cursor:pointer;text-align:left;font-family:'Inter';transition:all .15s ease;
+  }
+  .role:hover{border-color:var(--green)}
+  .role.selected{border-color:var(--green);background:var(--green-soft)}
+  .role .emoji{font-size:1.6rem;margin-bottom:10px}
+  .role h3{font-size:1.05rem;margin-bottom:4px}
+  .role p{color:var(--slate);font-size:.85rem}
+
+  .form-card{
+    background:#fff;border:1px solid var(--line);border-radius:18px;
+    padding:36px 32px;margin-bottom:60px;display:none;
+  }
+  .form-card.visible{display:block}
+  .form-card h2{font-size:1.3rem;margin-bottom:4px}
+  .form-card .sub{color:var(--slate);font-size:.9rem;margin-bottom:26px}
+  .section-label{
+    font-size:.78rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--green-dark);margin:26px 0 12px;padding-top:20px;border-top:1px solid var(--line);
+  }
+  .field{margin-bottom:16px}
+  label{display:block;font-size:.86rem;font-weight:600;margin-bottom:6px}
+  label .opt{color:var(--slate);font-weight:400;font-size:.8rem}
+  input,select,textarea{
+    width:100%;border:1.5px solid var(--line);border-radius:10px;
+    padding:12px 14px;font-family:'Inter';font-size:.94rem;color:var(--ink);
+    outline:none;transition:border-color .15s;background:#fff;
+  }
+  input:focus,select:focus,textarea:focus{border-color:var(--green)}
+  textarea{resize:vertical;min-height:80px}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .social-field{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .social-field .icon{
+    width:38px;height:38px;flex-shrink:0;border-radius:9px;background:var(--bg-soft);
+    display:flex;align-items:center;justify-content:center;font-size:1rem;border:1px solid var(--line);
+  }
+  .hint{font-size:.8rem;color:var(--slate);margin-bottom:14px}
+  .photo-upload{display:flex;align-items:center;gap:16px;margin-bottom:18px}
+  .photo-preview{
+    width:74px;height:74px;border-radius:50%;flex-shrink:0;
+    background:var(--bg-soft);border:2px dashed var(--line);
+    display:flex;align-items:center;justify-content:center;
+    font-size:1.5rem;color:var(--slate);overflow:hidden;
+  }
+  .photo-preview img{width:100%;height:100%;object-fit:cover}
+  .photo-btns label{
+    display:inline-block;cursor:pointer;font-size:.85rem;font-weight:600;
+    color:var(--green-dark);border:1.5px solid var(--green);
+    padding:8px 16px;border-radius:9px;margin-bottom:4px;
+  }
+  .photo-btns label:hover{background:var(--green-soft)}
+  .photo-btns .note{display:block;font-size:.76rem;color:var(--slate)}
+  .photo-btns input[type=file]{display:none}
+  button.submit{
+    width:100%;background:var(--green);color:#fff;border:none;cursor:pointer;
+    font-family:'Inter';font-weight:600;font-size:1rem;padding:15px;border-radius:10px;
+    margin-top:14px;transition:background .15s;
+  }
+  button.submit:hover{background:var(--green-dark)}
+  button.submit:disabled{background:var(--slate);cursor:wait}
+  .error{
+    display:none;background:#FDEDEB;border:1px solid #F0B9B1;color:#B03A2E;
+    border-radius:10px;padding:12px 16px;font-size:.88rem;margin-top:14px;
+  }
+  .success-card{
+    background:#fff;border:1px solid var(--line);border-radius:18px;
+    padding:44px 32px;margin-bottom:60px;text-align:center;display:none;
+  }
+  .success-card .check{
+    width:56px;height:56px;border-radius:50%;background:var(--green);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-size:1.6rem;margin:0 auto 18px;
+  }
+  .success-card h2{margin-bottom:8px}
+  .success-card p{color:var(--slate);font-size:.94rem;margin-bottom:22px}
+  .btn{
+    display:inline-block;text-decoration:none;font-weight:600;font-size:.95rem;
+    padding:12px 26px;border-radius:10px;background:var(--green);color:#fff;
+  }
+  .btn:hover{background:var(--green-dark)}
+  @media (max-width:560px){
+    .roles,.two-col{grid-template-columns:1fr}
+    .form-card{padding:26px 20px}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="index.html">YIT<span>FT</span></a>
+  <div class="links">
+    <a class="plain" href="login.html">Already have an account? Log in</a>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="page-head">
+    <h1>Create your account</h1>
+    <p>Choose how you want to use YITFT.</p>
+  </div>
+
+  <div class="roles">
+    <button class="role" id="roleCreator" onclick="selectRole('creator')">
+      <div class="emoji">🎬</div>
+      <h3>I'm a Creator</h3>
+      <p>I make content and want to work with brands.</p>
+    </button>
+    <button class="role" id="roleBrand" onclick="selectRole('brand')">
+      <div class="emoji">🏷️</div>
+      <h3>I'm a Brand</h3>
+      <p>I want creators to promote my business.</p>
+    </button>
+  </div>
+
+  <!-- ==================== CREATOR FORM ==================== -->
+  <div class="form-card" id="creatorForm">
+    <h2>Creator profile</h2>
+    <p class="sub">This becomes your public profile that brands will see.</p>
+
+    <form onsubmit="submitCreator(event)">
+      <div class="photo-upload">
+        <div class="photo-preview" id="cPhotoPreview">📷</div>
+        <div class="photo-btns">
+          <label for="cPhoto">Upload profile photo</label>
+          <input id="cPhoto" type="file" accept="image/*" onchange="handlePhoto(event,'cPhotoPreview')">
+          <span class="note">Optional — JPG or PNG. A clear face photo builds trust with brands.</span>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="field">
+          <label for="cName">Full name</label>
+          <input id="cName" required placeholder="Your name">
+        </div>
+        <div class="field">
+          <label for="cUsername">Username</label>
+          <input id="cUsername" required placeholder="e.g. sara.styles" pattern="[a-zA-Z0-9._]+" title="Letters, numbers, dots and underscores only">
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="field">
+          <label for="cEmail">Email</label>
+          <input id="cEmail" type="email" required placeholder="you@example.com">
+        </div>
+        <div class="field">
+          <label for="cPassword">Password</label>
+          <input id="cPassword" type="password" required minlength="6" placeholder="Min. 6 characters">
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="field">
+          <label for="cCity">City</label>
+          <select id="cCity" required class="city-select"></select>
+        </div>
+        <div class="field">
+          <label for="cNiche">Niche</label>
+          <select id="cNiche" required>
+            <option value="">Select your niche</option>
+            <option>Fashion & Beauty</option>
+            <option>Food</option>
+            <option>Comedy & Entertainment</option>
+            <option>Tech & Gaming</option>
+            <option>Education</option>
+            <option>Fitness & Sports</option>
+            <option>Vlogs & Lifestyle</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="cBio">Short bio</label>
+        <textarea id="cBio" required maxlength="200" placeholder="Tell brands who you are and what kind of content you make (max 200 characters)"></textarea>
+      </div>
+
+      <div class="section-label">Your social platforms</div>
+      <p class="hint">Add at least one. Paste full profile links.</p>
+
+      <div class="social-field"><div class="icon">📸</div><input id="sInstagram" type="url" placeholder="Instagram — https://instagram.com/yourhandle"></div>
+      <div class="social-field"><div class="icon">🎵</div><input id="sTiktok" type="url" placeholder="TikTok — https://tiktok.com/@yourhandle"></div>
+      <div class="social-field"><div class="icon">▶️</div><input id="sYoutube" type="url" placeholder="YouTube — https://youtube.com/@yourchannel"></div>
+      <div class="social-field"><div class="icon">🐦</div><input id="sTwitter" type="url" placeholder="X / Twitter — https://x.com/yourhandle"></div>
+      <div class="social-field"><div class="icon">📘</div><input id="sFacebook" type="url" placeholder="Facebook — https://facebook.com/yourpage"></div>
+
+      <div class="two-col">
+        <div class="field">
+          <label for="cFollowers">Total followers (approx.)</label>
+          <select id="cFollowers" required>
+            <option value="">Select range</option>
+            <option>1K – 10K</option>
+            <option>10K – 50K</option>
+            <option>50K – 200K</option>
+            <option>200K – 1M</option>
+            <option>1M+</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="cRate">Starting rate <span class="opt">(optional)</span></label>
+          <input id="cRate" placeholder="e.g. Rs 8,000 per reel">
+        </div>
+      </div>
+
+      <div class="error" id="creatorError"></div>
+      <button class="submit" type="submit" id="creatorBtn">Create my creator profile</button>
+    </form>
+  </div>
+
+  <!-- ==================== BRAND FORM ==================== -->
+  <div class="form-card" id="brandForm">
+    <h2>Brand account</h2>
+    <p class="sub">Tell creators who you are — verified brands get better responses.</p>
+
+    <form onsubmit="submitBrand(event)">
+      <div class="photo-upload">
+        <div class="photo-preview" id="bPhotoPreview">🏷️</div>
+        <div class="photo-btns">
+          <label for="bPhoto">Upload brand logo</label>
+          <input id="bPhoto" type="file" accept="image/*" onchange="handlePhoto(event,'bPhotoPreview')">
+          <span class="note">Optional — JPG or PNG. A logo makes your brand look established.</span>
+        </div>
+      </div>
+      <div class="field">
+        <label for="bName">Business name</label>
+        <input id="bName" required placeholder="e.g. Aura Clothing">
+      </div>
+      <div class="two-col">
+        <div class="field">
+          <label for="bEmail">Business email</label>
+          <input id="bEmail" type="email" required placeholder="contact@yourbrand.com">
+        </div>
+        <div class="field">
+          <label for="bPassword">Password</label>
+          <input id="bPassword" type="password" required minlength="6" placeholder="Min. 6 characters">
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="field">
+          <label for="bCategory">Category</label>
+          <select id="bCategory" required>
+            <option value="">Select category</option>
+            <option>Clothing & Fashion</option>
+            <option>Food & Restaurants</option>
+            <option>Electronics & Gadgets</option>
+            <option>Beauty & Cosmetics</option>
+            <option>Education & Courses</option>
+            <option>Services</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="bCity">City</label>
+          <select id="bCity" required class="city-select"></select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="bWebsite">Website or social page <span class="opt">(optional)</span></label>
+        <input id="bWebsite" type="url" placeholder="https://yourbrand.com or Instagram/Facebook page">
+      </div>
+      <div class="field">
+        <label for="bAbout">About your brand</label>
+        <textarea id="bAbout" required maxlength="200" placeholder="What do you sell, and who is your customer? (max 200 characters)"></textarea>
+      </div>
+
+      <div class="error" id="brandError"></div>
+      <button class="submit" type="submit" id="brandBtn">Create my brand account</button>
+    </form>
+  </div>
+
+  <!-- ==================== SUCCESS ==================== -->
+  <div class="success-card" id="successCard">
+    <div class="check">✓</div>
+    <h2>Account created!</h2>
+    <p id="successMsg">Your account is live in the YITFT database.</p>
+    <a class="btn" href="profile.html">View my profile</a>
+  </div>
+</div>
+
+<!-- Supabase library + hamari config -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="yitft-config.js"></script>
+
+<script>
+  // ============================================================
+  // LIVE MODE — accounts ab Supabase (real database) mein bante hain.
+  // Flow: (1) auth account banao  (2) profiles table mein row daalo
+  // ============================================================
+
+  let selectedRole = null;
+  let uploadedPhoto = null;
+
+  const PK_CITIES = {
+    "Punjab": ["Lahore","Faisalabad","Rawalpindi","Multan","Gujranwala","Sialkot","Bahawalpur","Sargodha","Sahiwal","Rahim Yar Khan"],
+    "Sindh": ["Karachi","Hyderabad","Sukkur","Larkana","Nawabshah"],
+    "Khyber Pakhtunkhwa": ["Peshawar","Mardan","Abbottabad","Swat","Dera Ismail Khan"],
+    "Balochistan": ["Quetta","Gwadar","Turbat"],
+    "Islamabad Capital Territory": ["Islamabad"],
+    "Azad Jammu & Kashmir": ["Muzaffarabad","Mirpur","Rawalakot"],
+    "Gilgit-Baltistan": ["Gilgit","Skardu"],
+    "Other": ["Other city"]
+  };
+
+  document.querySelectorAll('.city-select').forEach(sel => {
+    sel.innerHTML = '<option value="">Select your city</option>';
+    for (const [province, cities] of Object.entries(PK_CITIES)){
+      const group = document.createElement('optgroup');
+      group.label = province;
+      cities.forEach(city => {
+        const opt = document.createElement('option');
+        opt.textContent = city;
+        group.appendChild(opt);
+      });
+      sel.appendChild(group);
+    }
+  });
+
+  function selectRole(role){
+    selectedRole = role;
+    document.getElementById('roleCreator').classList.toggle('selected', role === 'creator');
+    document.getElementById('roleBrand').classList.toggle('selected', role === 'brand');
+    document.getElementById('creatorForm').classList.toggle('visible', role === 'creator');
+    document.getElementById('brandForm').classList.toggle('visible', role === 'brand');
+    document.getElementById('successCard').style.display = 'none';
+  }
+
+  function handlePhoto(e, previewId){
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev){
+      const img = new Image();
+      img.onload = function(){
+        const canvas = document.createElement('canvas');
+        const size = 300;
+        const side = Math.min(img.width, img.height);
+        canvas.width = size; canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, (img.width-side)/2, (img.height-side)/2, side, side, 0, 0, size, size);
+        uploadedPhoto = canvas.toDataURL('image/jpeg', 0.85);
+        document.getElementById(previewId).innerHTML = `<img src="${uploadedPhoto}" alt="preview">`;
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function showError(boxId, msg){
+    const box = document.getElementById(boxId);
+    box.textContent = msg;
+    box.style.display = 'block';
+  }
+
+  function friendlyError(err){
+    const m = (err && err.message) ? err.message : String(err);
+    if (m.includes('already registered')) return "This email already has an account. Try logging in instead.";
+    if (m.includes('profiles_username_key') || m.includes('duplicate')) return "This username is already taken. Please choose another one.";
+    if (m.includes('Failed to fetch')) return "Could not reach the server. Check your internet connection — and make sure your key is pasted in yitft-config.js.";
+    return m;
+  }
+
+  // ---------------- CREATOR SIGNUP ----------------
+  async function submitCreator(e){
+    e.preventDefault();
+    const btn = document.getElementById('creatorBtn');
+    const errBox = document.getElementById('creatorError');
+    errBox.style.display = 'none';
+
+    const socials = {
+      instagram: document.getElementById('sInstagram').value.trim(),
+      tiktok:    document.getElementById('sTiktok').value.trim(),
+      youtube:   document.getElementById('sYoutube').value.trim(),
+      twitter:   document.getElementById('sTwitter').value.trim(),
+      facebook:  document.getElementById('sFacebook').value.trim(),
+    };
+    if (!Object.values(socials).some(v => v !== '')){
+      showError('creatorError', "Please add at least one social platform link.");
+      return;
+    }
+
+    btn.disabled = true; btn.textContent = "Creating your account...";
+    try {
+      // Step 1: create the login account
+      const { data: authData, error: authError } = await sb.auth.signUp({
+        email: document.getElementById('cEmail').value.trim(),
+        password: document.getElementById('cPassword').value
+      });
+      if (authError) throw authError;
+
+      // Step 2: save the profile in the database
+      const { error: profileError } = await sb.from('profiles').insert({
+        id: authData.user.id,
+        role: 'creator',
+        name: document.getElementById('cName').value.trim(),
+        username: document.getElementById('cUsername').value.trim().toLowerCase(),
+        city: document.getElementById('cCity').value,
+        niche: document.getElementById('cNiche').value,
+        bio: document.getElementById('cBio').value.trim(),
+        followers: document.getElementById('cFollowers').value,
+        rate: document.getElementById('cRate').value.trim(),
+        socials: socials,
+        photo: uploadedPhoto
+      });
+      if (profileError) throw profileError;
+
+      showSuccess("Your creator profile is live! Brands can now find you on YITFT.");
+    } catch(err){
+      showError('creatorError', friendlyError(err));
+    }
+    btn.disabled = false; btn.textContent = "Create my creator profile";
+  }
+
+  // ---------------- BRAND SIGNUP ----------------
+  async function submitBrand(e){
+    e.preventDefault();
+    const btn = document.getElementById('brandBtn');
+    document.getElementById('brandError').style.display = 'none';
+
+    btn.disabled = true; btn.textContent = "Creating your account...";
+    try {
+      const { data: authData, error: authError } = await sb.auth.signUp({
+        email: document.getElementById('bEmail').value.trim(),
+        password: document.getElementById('bPassword').value
+      });
+      if (authError) throw authError;
+
+      const { error: profileError } = await sb.from('profiles').insert({
+        id: authData.user.id,
+        role: 'brand',
+        name: document.getElementById('bName').value.trim(),
+        category: document.getElementById('bCategory').value,
+        city: document.getElementById('bCity').value,
+        website: document.getElementById('bWebsite').value.trim(),
+        about: document.getElementById('bAbout').value.trim(),
+        photo: uploadedPhoto
+      });
+      if (profileError) throw profileError;
+
+      showSuccess("Your brand account is live! You can now browse creators.");
+    } catch(err){
+      showError('brandError', friendlyError(err));
+    }
+    btn.disabled = false; btn.textContent = "Create my brand account";
+  }
+
+  function showSuccess(msg){
+    document.getElementById('creatorForm').classList.remove('visible');
+    document.getElementById('brandForm').classList.remove('visible');
+    document.getElementById('successMsg').textContent = msg;
+    document.getElementById('successCard').style.display = 'block';
+    window.scrollTo({top: 0, behavior: 'smooth'});
+  }
+</script>
+
+</body>
+</html>

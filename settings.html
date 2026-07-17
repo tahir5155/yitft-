@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings — YITFT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B1B2B; --slate:#5A6B7C; --green:#0E9F6E; --green-dark:#0B7A55;
+    --green-soft:#E6F6F0; --bg-soft:#F6F8FA; --line:#E4E9EE;
+    --red:#C0392B; --red-soft:#FDEDEB;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Inter',sans-serif;color:var(--ink);background:var(--bg-soft);line-height:1.6;min-height:100vh}
+  h1,h2,h3{font-family:'Sora',sans-serif;letter-spacing:-.02em;line-height:1.15}
+  .wrap{max-width:680px;margin:0 auto;padding:0 20px}
+
+  .page-head{padding:40px 0 8px}
+  .page-head h1{font-size:1.7rem;margin-bottom:6px}
+  .page-head p{color:var(--slate);font-size:.95rem}
+
+  .loading{text-align:center;padding:80px 20px;color:var(--slate)}
+  .empty{background:#fff;border:1px solid var(--line);border-radius:18px;padding:50px 30px;text-align:center;margin:60px auto;max-width:480px}
+  .empty h2{margin-bottom:10px}
+  .empty p{color:var(--slate);margin-bottom:22px}
+  .btn{display:inline-block;text-decoration:none;font-weight:600;font-size:.95rem;padding:12px 26px;border-radius:10px;background:var(--green);color:#fff}
+  .btn:hover{background:var(--green-dark)}
+
+  .panel{background:#fff;border:1px solid var(--line);border-radius:18px;padding:30px 30px;margin:20px 0}
+  .panel h2{font-size:1.1rem;margin-bottom:4px}
+  .panel .sub{color:var(--slate);font-size:.88rem;margin-bottom:22px}
+
+  .field{margin-bottom:16px}
+  label{display:block;font-size:.86rem;font-weight:600;margin-bottom:6px}
+  label .opt{color:var(--slate);font-weight:400;font-size:.8rem}
+  input,select,textarea{
+    width:100%;border:1.5px solid var(--line);border-radius:10px;
+    padding:12px 14px;font-family:'Inter';font-size:.94rem;color:var(--ink);
+    outline:none;transition:border-color .15s;background:#fff;
+  }
+  input:focus,select:focus,textarea:focus{border-color:var(--green)}
+  textarea{resize:vertical;min-height:80px}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .section-label{font-size:.78rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--green-dark);margin:22px 0 12px;padding-top:18px;border-top:1px solid var(--line)}
+  .social-field{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .social-field .icon{width:38px;height:38px;flex-shrink:0;border-radius:9px;background:var(--bg-soft);display:flex;align-items:center;justify-content:center;font-size:1rem;border:1px solid var(--line)}
+
+  .photo-upload{display:flex;align-items:center;gap:16px;margin-bottom:22px}
+  .photo-preview{
+    width:74px;height:74px;border-radius:50%;flex-shrink:0;overflow:hidden;
+    background:var(--bg-soft);border:2px dashed var(--line);
+    display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:var(--slate);
+  }
+  .photo-preview img{width:100%;height:100%;object-fit:cover}
+  .photo-btns label{display:inline-block;cursor:pointer;font-size:.85rem;font-weight:600;color:var(--green-dark);border:1.5px solid var(--green);padding:8px 16px;border-radius:9px;margin-bottom:4px}
+  .photo-btns label:hover{background:var(--green-soft)}
+  .photo-btns .note{display:block;font-size:.76rem;color:var(--slate)}
+  .photo-btns input[type=file]{display:none}
+
+  button.submit{
+    background:var(--green);color:#fff;border:none;cursor:pointer;
+    font-family:'Inter';font-weight:600;font-size:.95rem;padding:13px 26px;border-radius:10px;
+    margin-top:6px;transition:background .15s;
+  }
+  button.submit:hover{background:var(--green-dark)}
+  button.submit:disabled{background:var(--slate);cursor:wait}
+
+  .msg{border-radius:10px;padding:12px 16px;font-size:.88rem;margin-top:14px;display:none}
+  .msg.ok{background:var(--green-soft);color:var(--green-dark);border:1px solid #B8E6D3}
+  .msg.err{background:var(--red-soft);color:var(--red);border:1px solid #F0B9B1}
+
+  .danger-panel{border:1.5px solid #F0B9B1}
+  .danger-panel h2{color:var(--red)}
+  .danger-panel p{color:var(--slate);font-size:.9rem;margin-bottom:18px}
+  .btn-danger{
+    background:#fff;color:var(--red);border:1.5px solid var(--red);cursor:pointer;
+    font-family:'Inter';font-weight:600;font-size:.92rem;padding:11px 22px;border-radius:9px;
+  }
+  .btn-danger:hover{background:var(--red-soft)}
+
+  .confirm-box{
+    display:none;margin-top:16px;background:var(--bg-soft);border:1px solid var(--line);
+    border-radius:12px;padding:18px 20px;
+  }
+  .confirm-box p{font-size:.88rem;margin-bottom:12px;color:var(--ink)}
+  .confirm-box .row{display:flex;gap:10px}
+
+  .footer-space{height:60px}
+  @media (max-width:560px){.two-col{grid-template-columns:1fr}.panel{padding:24px 20px}}
+</style>
+</head>
+<body>
+
+<div id="yitftNav"></div>
+
+<div class="wrap">
+  <div class="page-head">
+    <h1>Account Settings</h1>
+    <p>Update your profile, change your password, or manage your account.</p>
+  </div>
+  <div id="app"><div class="loading">Loading...</div></div>
+  <div class="footer-space"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="yitft-config.js"></script>
+<script src="yitft-notif.js"></script>
+<script src="yitft-nav.js"></script>
+<script>
+  const app = document.getElementById('app');
+  let currentProfile = null;
+  let uploadedPhoto = null;
+
+  const PK_CITIES = {
+    "Punjab": ["Lahore","Faisalabad","Rawalpindi","Multan","Gujranwala","Sialkot","Bahawalpur","Sargodha","Sahiwal","Rahim Yar Khan"],
+    "Sindh": ["Karachi","Hyderabad","Sukkur","Larkana","Nawabshah"],
+    "Khyber Pakhtunkhwa": ["Peshawar","Mardan","Abbottabad","Swat","Dera Ismail Khan"],
+    "Balochistan": ["Quetta","Gwadar","Turbat"],
+    "Islamabad Capital Territory": ["Islamabad"],
+    "Azad Jammu & Kashmir": ["Muzaffarabad","Mirpur","Rawalakot"],
+    "Gilgit-Baltistan": ["Gilgit","Skardu"],
+    "Other": ["Other city"]
+  };
+  const NICHES = ["Fashion & Beauty","Food","Comedy & Entertainment","Tech & Gaming","Education","Fitness & Sports","Vlogs & Lifestyle","Other"];
+  const CATEGORIES = ["Clothing & Fashion","Food & Restaurants","Electronics & Gadgets","Beauty & Cosmetics","Education & Courses","Services","Other"];
+  const FOLLOWER_RANGES = ["1K – 10K","10K – 50K","50K – 200K","200K – 1M","1M+"];
+
+  function esc(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+  function cityOptions(selected){
+    let html = '<option value="">Select your city</option>';
+    for (const [province, cities] of Object.entries(PK_CITIES)){
+      html += `<optgroup label="${province}">`;
+      cities.forEach(city => { html += `<option ${city===selected?'selected':''}>${city}</option>`; });
+      html += `</optgroup>`;
+    }
+    return html;
+  }
+  function selectOptions(list, selected, placeholder){
+    let html = `<option value="">${placeholder}</option>`;
+    list.forEach(item => { html += `<option ${item===selected?'selected':''}>${item}</option>`; });
+    return html;
+  }
+
+  function handlePhoto(e){
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev){
+      const img = new Image();
+      img.onload = function(){
+        const canvas = document.createElement('canvas');
+        const size = 300, side = Math.min(img.width, img.height);
+        canvas.width = size; canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, (img.width-side)/2, (img.height-side)/2, side, side, 0, 0, size, size);
+        uploadedPhoto = canvas.toDataURL('image/jpeg', 0.85);
+        document.getElementById('photoPreview').innerHTML = `<img src="${uploadedPhoto}" alt="">`;
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function friendlyError(err){
+    const m = (err && err.message) ? err.message : String(err);
+    if (m.includes('duplicate') || m.includes('profiles_username_key')) return "This username is already taken.";
+    if (m.includes('Failed to fetch')) return "Could not reach the server. Check your internet connection.";
+    return m;
+  }
+
+  async function init(){
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session){
+      app.innerHTML = `
+        <div class="empty">
+          <h2>You're not logged in</h2>
+          <p>Please log in to manage your account settings.</p>
+          <a class="btn" href="login.html">Log in</a>
+        </div>`;
+      return;
+    }
+
+    const { data: p, error } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
+    if (error || !p){
+      app.innerHTML = `<div class="empty"><h2>Profile not found</h2><p>Please contact support or sign up again.</p></div>`;
+      return;
+    }
+    currentProfile = p;
+    renderForm(p);
+  }
+
+  function renderForm(p){
+    const isCreator = p.role === 'creator';
+    const socials = p.socials || {};
+
+    app.innerHTML = `
+      <div class="panel">
+        <h2>Edit Profile</h2>
+        <p class="sub">Update the information brands and creators will see.</p>
+        <form id="profileForm">
+          <div class="photo-upload">
+            <div class="photo-preview" id="photoPreview">${p.photo ? `<img src="${p.photo}">` : (isCreator?'📷':'🏷️')}</div>
+            <div class="photo-btns">
+              <label for="photoInput">Change photo</label>
+              <input id="photoInput" type="file" accept="image/*" onchange="handlePhoto(event)">
+              <span class="note">Optional — JPG or PNG.</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>${isCreator ? 'Full name' : 'Business name'}</label>
+            <input id="fName" required value="${esc(p.name)}">
+          </div>
+
+          ${isCreator ? `
+          <div class="two-col">
+            <div class="field"><label>Username</label>
+              <input id="fUsername" required value="${esc(p.username)}" pattern="[a-zA-Z0-9._]+">
+            </div>
+            <div class="field"><label>City</label>
+              <select id="fCity">${cityOptions(p.city)}</select>
+            </div>
+          </div>
+          <div class="field"><label>Niche</label>
+            <select id="fNiche">${selectOptions(NICHES, p.niche, 'Select your niche')}</select>
+          </div>
+          <div class="field"><label>Short bio</label>
+            <textarea id="fBio" maxlength="200">${esc(p.bio)}</textarea>
+          </div>
+
+          <div class="section-label">Your social platforms</div>
+          <div class="social-field"><div class="icon">📸</div><input id="sInstagram" type="url" placeholder="Instagram" value="${esc(socials.instagram)}"></div>
+          <div class="social-field"><div class="icon">🎵</div><input id="sTiktok" type="url" placeholder="TikTok" value="${esc(socials.tiktok)}"></div>
+          <div class="social-field"><div class="icon">▶️</div><input id="sYoutube" type="url" placeholder="YouTube" value="${esc(socials.youtube)}"></div>
+          <div class="social-field"><div class="icon">🐦</div><input id="sTwitter" type="url" placeholder="X / Twitter" value="${esc(socials.twitter)}"></div>
+          <div class="social-field"><div class="icon">📘</div><input id="sFacebook" type="url" placeholder="Facebook" value="${esc(socials.facebook)}"></div>
+
+          <div class="two-col">
+            <div class="field"><label>Total followers</label>
+              <select id="fFollowers">${selectOptions(FOLLOWER_RANGES, p.followers, 'Select range')}</select>
+            </div>
+            <div class="field"><label>Starting rate <span class="opt">(optional)</span></label>
+              <input id="fRate" value="${esc(p.rate)}">
+            </div>
+          </div>
+          ` : `
+          <div class="two-col">
+            <div class="field"><label>Category</label>
+              <select id="fCategory">${selectOptions(CATEGORIES, p.category, 'Select category')}</select>
+            </div>
+            <div class="field"><label>City</label>
+              <select id="fCity">${cityOptions(p.city)}</select>
+            </div>
+          </div>
+          <div class="field"><label>Website or social page <span class="opt">(optional)</span></label>
+            <input id="fWebsite" type="url" value="${esc(p.website)}">
+          </div>
+          <div class="field"><label>About your brand</label>
+            <textarea id="fAbout" maxlength="200">${esc(p.about)}</textarea>
+          </div>
+          `}
+
+          <button class="submit" type="submit" id="saveBtn">Save changes</button>
+          <div class="msg ok" id="profileOk">Saved! Your profile has been updated.</div>
+          <div class="msg err" id="profileErr"></div>
+        </form>
+      </div>
+
+      <div class="panel">
+        <h2>Change Password</h2>
+        <p class="sub">Use a strong password you don't use elsewhere.</p>
+        <form id="passwordForm">
+          <div class="field"><label>New password</label>
+            <input id="newPass" type="password" required minlength="6" placeholder="Min. 6 characters">
+          </div>
+          <div class="field"><label>Confirm new password</label>
+            <input id="confirmPass" type="password" required minlength="6" placeholder="Re-enter password">
+          </div>
+          <button class="submit" type="submit" id="passBtn">Update password</button>
+          <div class="msg ok" id="passOk">Password updated successfully.</div>
+          <div class="msg err" id="passErr"></div>
+        </form>
+      </div>
+
+      <div class="panel danger-panel">
+        <h2>Delete Account</h2>
+        <p>This permanently deletes your profile and login. This cannot be undone.</p>
+        <button class="btn-danger" id="deleteStart">Delete my account</button>
+        <div class="confirm-box" id="confirmBox">
+          <p><b>Are you sure?</b> Type <b>DELETE</b> below to confirm. Your profile, photos, and account will be permanently removed.</p>
+          <div class="row">
+            <input id="confirmInput" placeholder="Type DELETE to confirm" style="flex:1">
+            <button class="btn-danger" id="confirmDelete">Confirm Delete</button>
+          </div>
+          <div class="msg err" id="deleteErr"></div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('profileForm').addEventListener('submit', saveProfile);
+    document.getElementById('passwordForm').addEventListener('submit', savePassword);
+    document.getElementById('deleteStart').onclick = () => {
+      document.getElementById('confirmBox').style.display = 'block';
+    };
+    document.getElementById('confirmDelete').onclick = doDelete;
+  }
+
+  async function saveProfile(e){
+    e.preventDefault();
+    const btn = document.getElementById('saveBtn');
+    const okBox = document.getElementById('profileOk');
+    const errBox = document.getElementById('profileErr');
+    okBox.style.display = 'none'; errBox.style.display = 'none';
+    btn.disabled = true; btn.textContent = 'Saving...';
+
+    const isCreator = currentProfile.role === 'creator';
+    let updateData = { name: document.getElementById('fName').value.trim() };
+    if (uploadedPhoto) updateData.photo = uploadedPhoto;
+
+    if (isCreator){
+      updateData = {
+        ...updateData,
+        username: document.getElementById('fUsername').value.trim().toLowerCase(),
+        city: document.getElementById('fCity').value,
+        niche: document.getElementById('fNiche').value,
+        bio: document.getElementById('fBio').value.trim(),
+        followers: document.getElementById('fFollowers').value,
+        rate: document.getElementById('fRate').value.trim(),
+        socials: {
+          instagram: document.getElementById('sInstagram').value.trim(),
+          tiktok: document.getElementById('sTiktok').value.trim(),
+          youtube: document.getElementById('sYoutube').value.trim(),
+          twitter: document.getElementById('sTwitter').value.trim(),
+          facebook: document.getElementById('sFacebook').value.trim(),
+        }
+      };
+    } else {
+      updateData = {
+        ...updateData,
+        category: document.getElementById('fCategory').value,
+        city: document.getElementById('fCity').value,
+        website: document.getElementById('fWebsite').value.trim(),
+        about: document.getElementById('fAbout').value.trim(),
+      };
+    }
+
+    const { error } = await sb.from('profiles').update(updateData).eq('id', currentProfile.id);
+    btn.disabled = false; btn.textContent = 'Save changes';
+
+    if (error){
+      errBox.textContent = friendlyError(error);
+      errBox.style.display = 'block';
+    } else {
+      okBox.style.display = 'block';
+      currentProfile = { ...currentProfile, ...updateData };
+      if (window.yitftRenderNav) window.yitftRenderNav();
+      window.scrollTo({top:0, behavior:'smooth'});
+    }
+  }
+
+  async function savePassword(e){
+    e.preventDefault();
+    const btn = document.getElementById('passBtn');
+    const okBox = document.getElementById('passOk');
+    const errBox = document.getElementById('passErr');
+    okBox.style.display = 'none'; errBox.style.display = 'none';
+
+    const p1 = document.getElementById('newPass').value;
+    const p2 = document.getElementById('confirmPass').value;
+    if (p1 !== p2){
+      errBox.textContent = "Passwords don't match.";
+      errBox.style.display = 'block';
+      return;
+    }
+
+    btn.disabled = true; btn.textContent = 'Updating...';
+    const { error } = await sb.auth.updateUser({ password: p1 });
+    btn.disabled = false; btn.textContent = 'Update password';
+
+    if (error){
+      errBox.textContent = friendlyError(error);
+      errBox.style.display = 'block';
+    } else {
+      okBox.style.display = 'block';
+      document.getElementById('passwordForm').reset();
+    }
+  }
+
+  async function doDelete(){
+    const input = document.getElementById('confirmInput').value.trim();
+    const errBox = document.getElementById('deleteErr');
+    errBox.style.display = 'none';
+
+    if (input !== 'DELETE'){
+      errBox.textContent = 'Please type DELETE exactly to confirm.';
+      errBox.style.display = 'block';
+      return;
+    }
+
+    const btn = document.getElementById('confirmDelete');
+    btn.disabled = true; btn.textContent = 'Deleting...';
+
+    const { error } = await sb.rpc('delete_user');
+
+    if (error){
+      errBox.textContent = friendlyError(error);
+      errBox.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Confirm Delete';
+      return;
+    }
+
+    await sb.auth.signOut();
+    window.location.href = 'index.html';
+  }
+
+  init();
+</script>
+
+</body>
+</html>

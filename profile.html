@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Profile — YITFT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B1B2B; --slate:#5A6B7C; --green:#0E9F6E; --green-dark:#0B7A55;
+    --green-soft:#E6F6F0; --bg-soft:#F6F8FA; --line:#E4E9EE; --gold:#D9A400;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Inter',sans-serif;color:var(--ink);background:var(--bg-soft);line-height:1.6;min-height:100vh}
+  h1,h2,h3{font-family:'Sora',sans-serif;letter-spacing:-.02em;line-height:1.15}
+  .wrap{max-width:860px;margin:0 auto;padding:0 20px}
+
+  .empty{
+    background:#fff;border:1px solid var(--line);border-radius:18px;
+    padding:50px 30px;text-align:center;margin:60px auto;max-width:480px;
+  }
+  .empty h2{margin-bottom:10px;font-size:1.3rem}
+  .empty p{color:var(--slate);font-size:.94rem;margin-bottom:24px}
+  .btn{
+    display:inline-block;text-decoration:none;font-weight:600;font-size:.95rem;
+    padding:12px 26px;border-radius:10px;background:var(--green);color:#fff;
+  }
+  .btn:hover{background:var(--green-dark)}
+
+  .loading{text-align:center;padding:80px 20px;color:var(--slate)}
+
+  .profile-head{
+    background:#fff;border:1px solid var(--line);border-radius:18px;
+    padding:36px 34px;margin-top:36px;display:flex;gap:26px;align-items:flex-start;
+  }
+  .avatar{
+    width:92px;height:92px;border-radius:50%;flex-shrink:0;overflow:hidden;
+    background:linear-gradient(135deg,var(--green),#3BC9A0);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Sora';font-weight:800;font-size:2.2rem;color:#fff;
+  }
+  .avatar.brand{background:var(--ink);border-radius:20px}
+  .avatar img{width:100%;height:100%;object-fit:cover;border-radius:inherit}
+  .head-info{flex:1}
+  .name-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .head-info h1{font-size:1.6rem}
+  .badge{
+    font-size:.72rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
+    background:var(--green-soft);color:var(--green-dark);padding:4px 12px;border-radius:99px;
+  }
+  .badge.new{background:#FFF6E0;color:var(--gold)}
+  .badge.l1{background:var(--green-soft);color:var(--green-dark)}
+  .badge.l2{background:#E0F0FF;color:#1D6FC2}
+  .badge.top{background:#FFF6E0;color:var(--gold)}
+  .meta{color:var(--slate);font-size:.92rem;margin-top:4px}
+  .bio{margin-top:14px;font-size:.95rem;max-width:56ch}
+
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:20px}
+  .stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px 22px}
+  .stat .k{font-size:.78rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--slate)}
+  .stat .v{font-family:'Sora';font-weight:700;font-size:1.35rem;margin-top:4px}
+  .stat .v.green{color:var(--green-dark)}
+
+  .panel{background:#fff;border:1px solid var(--line);border-radius:18px;padding:28px 30px;margin-top:20px}
+  .panel h2{font-size:1.1rem;margin-bottom:18px}
+  .socials{display:flex;flex-wrap:wrap;gap:12px}
+  .social-link{
+    display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);
+    border:1.5px solid var(--line);border-radius:12px;padding:11px 18px;
+    font-size:.9rem;font-weight:500;transition:all .15s;
+  }
+  .social-link:hover{border-color:var(--green);background:var(--green-soft)}
+  .social-link .ic{font-size:1.1rem}
+  .rate-line{display:flex;justify-content:space-between;align-items:center;padding:12px 0;font-size:.93rem}
+  .rate-line .price{font-weight:600;color:var(--green-dark)}
+  .placeholder-note{
+    background:var(--bg-soft);border:1px dashed var(--line);border-radius:12px;
+    padding:18px 20px;font-size:.88rem;color:var(--slate);
+  }
+  .footer-space{height:60px}
+
+  @media (max-width:640px){
+    .profile-head{flex-direction:column;align-items:center;text-align:center;padding:28px 20px}
+    .name-row{justify-content:center}
+    .bio{margin-left:auto;margin-right:auto}
+    .stats{grid-template-columns:1fr}
+    .socials{justify-content:center}
+  }
+</style>
+</head>
+<body>
+
+<div id="yitftNav"></div>
+
+<div class="wrap" id="app">
+  <div class="loading">Loading your profile...</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="yitft-config.js"></script>
+<script src="yitft-notif.js"></script>
+<script src="yitft-nav.js"></script>
+<script>
+  // ============================================================
+  // LIVE MODE — profile ab database se aati hai.
+  // Agar URL mein ?id=... ho, to wo kisi aur ki PUBLIC profile hai
+  // (login zaroori nahi). Warna apni profile dikhti hai (login zaroori).
+  // ============================================================
+
+  const app = document.getElementById('app');
+  const viewId = new URLSearchParams(window.location.search).get('id');
+  let viewerIsBrand = false;
+
+  function esc(s){
+    const d = document.createElement('div');
+    d.textContent = s || '';
+    return d.innerHTML;
+  }
+  function initials(name){
+    return (name||'?').split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+  }
+  function avatarContent(p){
+    return p.photo ? `<img src="${p.photo}" alt="${esc(p.name)}">` : initials(p.name);
+  }
+
+  // Same thresholds as browse.html — kept in sync so levels mean the same thing everywhere
+  function getLevel(earned, deals, rating){
+    const r = rating || 0;
+    if (earned >= 1000000 && deals >= 40 && r >= 4.8) return {key:'top', label:'Top Rated'};
+    if (earned >= 400000 && deals >= 20 && r >= 4.6) return {key:'l2', label:'Level 2'};
+    if (earned >= 100000 && deals >= 5 && r >= 4.5) return {key:'l1', label:'Level 1'};
+    return {key:'new', label:'New Member'};
+  }
+
+  async function fetchCreatorStats(id){
+    const { data, error } = await sb.rpc('get_creator_stats', { creator: id });
+    if (error || !data || !data.length) return { completed_deals: 0, total_earned: 0, avg_rating: null };
+    return data[0];
+  }
+  async function fetchBrandStats(id){
+    const { data, error } = await sb.rpc('get_brand_stats', { b: id });
+    if (error || !data || !data.length) return { campaigns_run: 0, creators_count: 0, avg_rating: null };
+    return data[0];
+  }
+
+  async function init(){
+    const { data: { session } } = await sb.auth.getSession();
+
+    // ---------- Viewing SOMEONE ELSE'S public profile ----------
+    if (viewId){
+      if (session){
+        const { data: myProfile } = await sb.from('profiles').select('role').eq('id', session.user.id).single();
+        viewerIsBrand = myProfile && myProfile.role === 'brand' && viewId !== session.user.id;
+      }
+
+      const { data: p, error } = await sb.from('profiles').select('*').eq('id', viewId).single();
+      if (error || !p){
+        app.innerHTML = `
+          <div class="empty">
+            <h2>Profile not found</h2>
+            <p>This profile may have been removed.</p>
+            <a class="btn" href="browse.html">Back to Browse</a>
+          </div>`;
+        return;
+      }
+
+      if (p.role === 'creator'){
+        const stats = await fetchCreatorStats(p.id);
+        renderCreator(p, false, stats);
+      } else {
+        const stats = await fetchBrandStats(p.id);
+        renderBrand(p, false, stats);
+      }
+      return;
+    }
+
+    // ---------- Viewing MY OWN profile ----------
+    if (!session){
+      app.innerHTML = `
+        <div class="empty">
+          <h2>You're not logged in</h2>
+          <p>Log in to see your profile, or create a free account.</p>
+          <a class="btn" href="login.html">Log in</a>
+          <p style="margin-top:14px;font-size:.88rem">New here? <a href="signup.html" style="color:var(--green-dark);font-weight:600">Sign up free</a></p>
+        </div>`;
+      return;
+    }
+
+    // Database se profile lao
+    const { data: p, error } = await sb.from('profiles')
+      .select('*').eq('id', session.user.id).single();
+
+    if (error || !p){
+      app.innerHTML = `
+        <div class="empty">
+          <h2>Profile not found</h2>
+          <p>Your account exists but has no profile yet. Please sign up again to complete it.</p>
+          <a class="btn" href="signup.html">Complete my profile</a>
+        </div>`;
+      return;
+    }
+
+    if (p.role === 'creator'){
+      const stats = await fetchCreatorStats(p.id);
+      renderCreator(p, true, stats);
+    } else {
+      const stats = await fetchBrandStats(p.id);
+      renderBrand(p, true, stats);
+    }
+  }
+
+  async function messageThisCreator(creatorId){
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session){
+      alert('Please log in as a brand to message creators.');
+      window.location.href = 'login.html';
+      return;
+    }
+    let { data: existing } = await sb.from('conversations')
+      .select('id').eq('brand_id', session.user.id).eq('creator_id', creatorId).maybeSingle();
+    let convoId = existing ? existing.id : null;
+    if (!convoId){
+      const { data: created, error } = await sb.from('conversations')
+        .insert({ brand_id: session.user.id, creator_id: creatorId })
+        .select('id').single();
+      if (error){ alert('Could not start conversation: ' + error.message); return; }
+      convoId = created.id;
+    }
+    window.location.href = 'chat.html?id=' + convoId;
+  }
+
+  function renderCreator(p, isOwn, stats){
+    const platforms = [
+      {key:'instagram', label:'Instagram', ic:'📸'},
+      {key:'tiktok',    label:'TikTok',    ic:'🎵'},
+      {key:'youtube',   label:'YouTube',   ic:'▶️'},
+      {key:'twitter',   label:'X / Twitter', ic:'🐦'},
+      {key:'facebook',  label:'Facebook',  ic:'📘'},
+    ];
+    const socials = p.socials || {};
+    const socialLinks = platforms
+      .filter(pl => socials[pl.key])
+      .map(pl => `
+        <a class="social-link" href="${esc(socials[pl.key])}" target="_blank" rel="noopener">
+          <span class="ic">${pl.ic}</span> ${pl.label}
+        </a>`).join('');
+
+    const rateSection = p.rate
+      ? `<div class="rate-line"><span>Starting rate</span><span class="price">${esc(p.rate)}</span></div>`
+      : `<div class="placeholder-note">No rate card yet. Adding your rates helps brands send you better offers faster.</div>`;
+
+    const messageBtn = (!isOwn && viewerIsBrand)
+      ? `<button class="btn" style="border:none;cursor:pointer;margin-top:16px" onclick="messageThisCreator('${p.id}')">Message ${esc(p.name)}</button>`
+      : '';
+
+    const level = getLevel(stats.total_earned, stats.completed_deals, stats.avg_rating);
+
+    app.innerHTML = `
+      <div class="profile-head">
+        <div class="avatar">${avatarContent(p)}</div>
+        <div class="head-info">
+          <div class="name-row">
+            <h1>${esc(p.name)}</h1>
+            <span class="badge">Creator</span>
+            <span class="badge ${level.key}">${level.label}</span>
+          </div>
+          <div class="meta">@${esc(p.username)} · ${esc(p.niche)} · ${esc(p.city)}</div>
+          <p class="bio">${esc(p.bio)}</p>
+          ${messageBtn}
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="k">Followers</div><div class="v">${esc(p.followers)}</div></div>
+        <div class="stat"><div class="k">Deals completed</div><div class="v green">${stats.completed_deals}</div></div>
+        <div class="stat"><div class="k">Rating</div><div class="v">${stats.avg_rating ? '★ ' + stats.avg_rating : '—'}</div></div>
+      </div>
+      <div class="panel"><h2>Platforms</h2><div class="socials">${socialLinks}</div></div>
+      <div class="panel"><h2>Rates</h2>${rateSection}</div>
+      <div class="panel"><h2>Reviews</h2>
+        <div class="placeholder-note">No reviews yet. After each completed deal, brands rate this creator — reviews will appear here.</div>
+      </div>
+      <div class="footer-space"></div>`;
+  }
+
+  function renderBrand(p, isOwn, stats){
+    const website = p.website
+      ? `<a class="social-link" href="${esc(p.website)}" target="_blank" rel="noopener"><span class="ic">🔗</span> Website / Page</a>`
+      : `<div class="placeholder-note">No website or page added yet.</div>`;
+
+    app.innerHTML = `
+      <div class="profile-head">
+        <div class="avatar brand">${avatarContent(p)}</div>
+        <div class="head-info">
+          <div class="name-row">
+            <h1>${esc(p.name)}</h1>
+            <span class="badge">Brand</span>
+          </div>
+          <div class="meta">${esc(p.category)} · ${esc(p.city)}</div>
+          <p class="bio">${esc(p.about)}</p>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="k">Campaigns run</div><div class="v">${stats.campaigns_run}</div></div>
+        <div class="stat"><div class="k">Creators worked with</div><div class="v green">${stats.creators_count}</div></div>
+        <div class="stat"><div class="k">Rating</div><div class="v">${stats.avg_rating ? '★ ' + stats.avg_rating : '—'}</div></div>
+      </div>
+      <div class="panel"><h2>Links</h2><div class="socials">${website}</div></div>
+      <div class="panel"><h2>Reviews from creators</h2>
+        <div class="placeholder-note">No reviews yet. Creators rate brands after each completed deal — good ratings help you attract top creators.</div>
+      </div>
+      <div class="footer-space"></div>`;
+  }
+
+  init();
+</script>
+
+</body>
+</html>

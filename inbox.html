@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Messages — YITFT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B1B2B; --slate:#5A6B7C; --green:#0E9F6E; --green-dark:#0B7A55;
+    --green-soft:#E6F6F0; --bg-soft:#F6F8FA; --line:#E4E9EE; --red:#E23B3B;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Inter',sans-serif;color:var(--ink);background:var(--bg-soft);line-height:1.6;min-height:100vh}
+  h1,h2{font-family:'Sora',sans-serif;letter-spacing:-.02em}
+  .wrap{max-width:720px;margin:0 auto;padding:0 20px}
+
+  .page-head{padding:40px 0 20px}
+  .page-head h1{font-size:1.7rem;margin-bottom:6px}
+  .page-head p{color:var(--slate);font-size:.95rem}
+
+  .loading{text-align:center;padding:60px;color:var(--slate)}
+  .empty{background:#fff;border:1px dashed var(--line);border-radius:16px;padding:50px 30px;text-align:center}
+  .empty h2{margin-bottom:8px;font-size:1.15rem}
+  .empty p{color:var(--slate);font-size:.9rem;margin-bottom:20px}
+  .btn{display:inline-block;text-decoration:none;font-weight:600;font-size:.9rem;padding:11px 22px;border-radius:10px;background:var(--green);color:#fff}
+  .btn:hover{background:var(--green-dark)}
+
+  .convo-list{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;margin-bottom:60px}
+  .convo-row{
+    display:flex;align-items:center;gap:14px;padding:18px 20px;
+    text-decoration:none;color:var(--ink);border-bottom:1px solid var(--line);
+    transition:background .12s;
+  }
+  .convo-row:last-child{border-bottom:none}
+  .convo-row:hover{background:var(--bg-soft)}
+  .cavatar{
+    width:48px;height:48px;border-radius:50%;flex-shrink:0;overflow:hidden;
+    background:linear-gradient(135deg,var(--green),#3BC9A0);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Sora';font-weight:800;font-size:1.05rem;color:#fff;
+  }
+  .cavatar img{width:100%;height:100%;object-fit:cover}
+  .convo-mid{flex:1;min-width:0}
+  .convo-name{font-weight:600;font-size:.96rem;display:flex;align-items:center;gap:8px}
+  .unread-dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0}
+  .convo-preview{font-size:.86rem;color:var(--slate);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+  .convo-preview.unread{color:var(--ink);font-weight:600}
+  .convo-time{font-size:.78rem;color:var(--slate);flex-shrink:0}
+</style>
+</head>
+<body>
+
+<div id="yitftNav"></div>
+
+<div class="wrap">
+  <div class="page-head">
+    <h1>Messages</h1>
+    <p>Your conversations with brands and creators.</p>
+  </div>
+  <div id="app"><div class="loading">Loading...</div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="yitft-config.js"></script>
+<script src="yitft-notif.js"></script>
+<script src="yitft-nav.js"></script>
+<script>
+  const app = document.getElementById('app');
+
+  function esc(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+  function initials(name){ return (name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase(); }
+
+  async function init(){
+    const me = await yitftGetMe();
+
+    if (!me){
+      app.innerHTML = `
+        <div class="empty">
+          <h2>You're not logged in</h2>
+          <p>Log in to see your messages.</p>
+          <a class="btn" href="login.html">Log in</a>
+        </div>`;
+      return;
+    }
+
+    const isBrand = me.profile.role === 'brand';
+    const idField = isBrand ? 'brand_id' : 'creator_id';
+    const otherField = isBrand ? 'creator_id' : 'brand_id';
+    const readField = isBrand ? 'brand_last_read_at' : 'creator_last_read_at';
+    const deletedField = isBrand ? 'deleted_by_brand' : 'deleted_by_creator';
+
+    const { data: convos, error } = await sb.from('conversations')
+      .select('*')
+      .eq(idField, me.session.user.id)
+      .eq(deletedField, false)
+      .order('last_message_at', { ascending: false });
+
+    if (error){
+      app.innerHTML = `<div class="empty"><h2>Could not load messages</h2><p>${esc(error.message)}</p></div>`;
+      return;
+    }
+
+    if (!convos || convos.length === 0){
+      app.innerHTML = isBrand
+        ? `<div class="empty"><h2>No conversations yet</h2><p>Browse creators and start a conversation about your campaign.</p><a class="btn" href="browse.html">Browse Creators</a></div>`
+        : `<div class="empty"><h2>No conversations yet</h2><p>When a brand messages you, it will show up here.</p></div>`;
+      return;
+    }
+
+    // Fetch the "other person" in each conversation
+    const otherIds = [...new Set(convos.map(c => c[otherField]))];
+    const { data: others } = await sb.from('profiles').select('*').in('id', otherIds);
+    const othersById = {};
+    (others || []).forEach(o => othersById[o.id] = o);
+
+    const rows = convos.map(c => {
+      const other = othersById[c[otherField]] || { name: 'Unknown user' };
+      const unread = c.last_message_preview && new Date(c.last_message_at) > new Date(c[readField]);
+      return `
+        <a class="convo-row" href="chat.html?id=${c.id}">
+          <div class="cavatar">${other.photo ? `<img src="${other.photo}">` : initials(other.name)}</div>
+          <div class="convo-mid">
+            <div class="convo-name">${esc(other.name)} ${unread ? '<span class="unread-dot"></span>' : ''}</div>
+            <div class="convo-preview ${unread ? 'unread' : ''}">${esc(c.last_message_preview || 'No messages yet')}</div>
+          </div>
+          <div class="convo-time">${yitftTimeAgo(c.last_message_at)}</div>
+        </a>`;
+    }).join('');
+
+    app.innerHTML = `<div class="convo-list">${rows}</div>`;
+  }
+
+  init();
+</script>
+
+</body>
+</html>
